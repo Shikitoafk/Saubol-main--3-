@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronRight, Trophy, Target, Zap, BookOpen, LogOut, User } from "lucide-react";
+import { ChevronRight, Trophy, Target, Zap, BookOpen, LogOut, User, PenTool } from "lucide-react";
 
 interface UserProgress {
   total_questions: number;
