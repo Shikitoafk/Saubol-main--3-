@@ -14,6 +14,7 @@ import { defineConfig } from "vite";
     build: {
       outDir: "dist",
       emptyOutDir: true,
+      sourcemap: false,
     },
     server: {
       port: Number(process.env.PORT) || 3000,
