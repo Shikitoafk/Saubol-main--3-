@@ -42,7 +42,12 @@ Essay: ${essay}`;
 
     if (!apiResponse.ok) {
       const errorData = await apiResponse.text();
-      return res.status(apiResponse.status).json({ error: 'Gemini API error', details: errorData });
+      console.error("Gemini API Error details:", apiResponse.status, errorData);
+      return res.status(apiResponse.status).json({ 
+        error: 'Gemini API error', 
+        status: apiResponse.status,
+        details: errorData 
+      });
     }
 
     const data = await apiResponse.json();
