@@ -18,8 +18,18 @@ import {
   Clock,
   Award,
   Calendar,
-  ArrowRight
+  ArrowRight,
+  History
 } from "lucide-react";
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from 'recharts';
 
 interface UserProgress {
   total_questions: number;
@@ -305,47 +315,138 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          {/* IELTS Writing Activity */}
-          <Card className="mb-8 overflow-hidden border-indigo-200">
-            <CardHeader className="bg-indigo-50/50 border-b border-indigo-100">
+          {/* Performance Chart */}
+          <Card className="mb-8">
+            <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-indigo-600" />
-                IELTS Writing History
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+                Activity Overview
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y">
-                {(!progress?.ielts_activity || progress.ielts_activity.length === 0) ? (
-                  <div className="p-8 text-center">
-                    <p className="text-gray-500 mb-4">No IELTS writing checked yet.</p>
-                    <Button 
-                      onClick={() => navigate('/ielts/writing-checker')} 
-                      className="bg-indigo-600 hover:bg-indigo-700"
-                    >
-                      Analyze First Essay →
-                    </Button>
-                  </div>
-                ) : (
-                  progress.ielts_activity.map((activity, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
-                          {(activity.score / 10).toFixed(1)}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">{activity.test_name}</p>
-                          <p className="text-xs text-slate-500">IELTS Writing · {new Date(activity.completed_at).toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => navigate('/ielts/writing-checker')}>
-                        View Details
-                      </Button>
-                    </div>
-                  ))
-                )}
+            <CardContent>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={progress?.daily_activity || []}>
+                    <defs>
+                      <linearGradient id="colorQuestions" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="#64748b" 
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false}
+                    />
+                    <YAxis 
+                      stroke="#64748b" 
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false}
+                      tickFormatter={(value) => `${value}`}
+                    />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="questions_answered" 
+                      stroke="#3b82f6" 
+                      strokeWidth={2}
+                      fillOpacity={1} 
+                      fill="url(#colorQuestions)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
+
+          <div className="grid gap-8 md:grid-cols-2">
+            {/* IELTS Writing Activity */}
+            <Card className="overflow-hidden border-indigo-200">
+              <CardHeader className="bg-indigo-50/50 border-b border-indigo-100">
+                <CardTitle className="flex items-center gap-2 text-indigo-900">
+                  <Brain className="h-5 w-5 text-indigo-600" />
+                  IELTS Writing History
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-indigo-50">
+                  {(!progress?.ielts_activity || progress.ielts_activity.length === 0) ? (
+                    <div className="p-12 text-center">
+                      <p className="text-gray-500 mb-4">No IELTS writing checked yet.</p>
+                      <Button 
+                        onClick={() => navigate('/ielts/writing-checker')} 
+                        className="bg-indigo-600 hover:bg-indigo-700"
+                      >
+                        Analyze First Essay →
+                      </Button>
+                    </div>
+                  ) : (
+                    progress.ielts_activity.map((activity, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 hover:bg-indigo-50/30 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold border border-indigo-200">
+                            {(activity.score / 10).toFixed(1)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">{activity.test_name}</p>
+                            <p className="text-xs text-slate-500">{new Date(activity.completed_at).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="sm" className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-100" onClick={() => navigate('/ielts/writing-checker')}>
+                          View
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent SAT Activity */}
+            <Card className="overflow-hidden border-slate-200">
+              <CardHeader className="bg-slate-50 border-b border-slate-100">
+                <CardTitle className="flex items-center gap-2 text-slate-900">
+                  <History className="h-5 w-5 text-slate-600" />
+                  Recent SAT Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-slate-100">
+                  {(!progress?.recent_activity || progress.recent_activity.length === 0) ? (
+                    <div className="p-12 text-center">
+                      <p className="text-gray-500 mb-4">No SAT questions answered yet.</p>
+                      <Button onClick={() => navigate('/sat')} variant="outline">
+                        Start SAT Practice
+                      </Button>
+                    </div>
+                  ) : (
+                    progress.recent_activity.map((activity, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${activity.correct ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                            {activity.correct ? <Target className="h-5 w-5" /> : <Zap className="h-5 w-5" />}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">{activity.section}</p>
+                            <p className="text-xs text-slate-500">{activity.topic} · {new Date(activity.date).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${activity.correct ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                          {activity.correct ? 'Correct' : 'Incorrect'}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Recent Activity */}
           <Card className="mb-8">
