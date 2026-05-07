@@ -97,8 +97,8 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
 
     const userMessage = `TASK_TYPE: ${taskType}\nTASK_PROMPT: ${prompt || 'N/A'}\nUSER_ESSAY: ${essay}`;
 
-    const callGemini = async (modelName, apiKey, apiVersion = 'v1beta') => {
-      console.log(`Trying Gemini model: ${modelName} via ${apiVersion} using key ${apiKey.substring(0, 5)}...`);
+    const callGemini = async (modelName, apiKey, keyIndex, apiVersion = 'v1beta') => {
+      console.log(`Trying Gemini model: ${modelName} via ${apiVersion} using Key #${keyIndex + 1} (${apiKey.substring(0, 10)}...)`);
       
       const parts = [{ text: userMessage }];
       
@@ -136,9 +136,12 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
     let apiResponse;
     const modelsToTry = [
       { name: 'gemini-2.0-flash', version: 'v1beta' },
-      { name: 'gemini-2.0-flash-001', version: 'v1beta' },
+      { name: 'gemini-2.0-flash-thinking-exp', version: 'v1beta' },
+      { name: 'gemini-2.0-pro-exp', version: 'v1beta' },
       { name: 'gemini-2.0-pro-exp-0205', version: 'v1beta' },
-      { name: 'gemini-2.0-flash-lite-preview-0205', version: 'v1beta' }
+      { name: 'gemini-2.0-flash-lite-preview-0205', version: 'v1beta' },
+      { name: 'gemini-1.5-pro', version: 'v1' },
+      { name: 'gemini-1.5-flash', version: 'v1' }
     ];
 
     // Helper for IELTS overall rounding rules
@@ -158,8 +161,9 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
     const apiKeys = [GEMINI_API_KEY, GEMINI_API_KEY2].filter(Boolean);
 
     for (const model of modelsToTry) {
-      for (const key of apiKeys) {
-        const apiResponse = await callGemini(model.name, key, model.version);
+      for (let i = 0; i < apiKeys.length; i++) {
+        const key = apiKeys[i];
+        const apiResponse = await callGemini(model.name, key, i, model.version);
         
         if (apiResponse.ok) {
           const data = await apiResponse.json();
