@@ -116,12 +116,13 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
       );
     };
 
-    let apiResponse = await callGemini('gemini-2.5-flash', 'v1beta');
+    // PRIMARY: Gemini 3.1 Flash
+    let apiResponse = await callGemini('gemini-3.1-flash', 'v1beta');
 
-    // FALLBACK: If 2.5 is overloaded (503), try 1.5 Flash on v1
+    // FALLBACK: If 3.1 is overloaded, try 2.5 Flash
     if (apiResponse.status === 503 || apiResponse.status === 429) {
-      console.warn(`Gemini 2.5 is ${apiResponse.status}. Falling back to 1.5 Flash...`);
-      apiResponse = await callGemini('gemini-1.5-flash', 'v1');
+      console.warn(`Gemini 3.1 is ${apiResponse.status}. Falling back to 2.5 Flash...`);
+      apiResponse = await callGemini('gemini-2.5-flash', 'v1beta');
     }
 
     if (!apiResponse.ok) {
