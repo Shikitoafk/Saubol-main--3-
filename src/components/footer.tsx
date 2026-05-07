@@ -1,82 +1,85 @@
 import { Link } from "react-router-dom";
-import { Send } from "lucide-react";
+import { Send, Globe, ShieldCheck } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-foreground text-background border-t border-border">
-      <div className="container mx-auto px-4 py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
+    <footer className="bg-black border-t border-white/5 py-24 relative overflow-hidden">
+      <div className="max-w-[1400px] mx-auto px-10 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-20">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-xl">
+            <div className="flex items-center gap-3 mb-8 group">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white text-black font-black text-xl italic shadow-[0_0_20px_rgba(255,255,255,0.1)] group-hover:scale-110 transition-transform">
                 S
               </div>
-              <span className="font-bold text-xl tracking-tight">
-                Saubol
+              <span className="font-black text-2xl tracking-tighter text-shimmer">
+                SAUBOL.
               </span>
             </div>
-            <p className="text-muted text-sm md:text-base leading-relaxed max-w-sm">
-              Your trusted guide to top universities. We help ambitious students navigate admissions, prepare for tests, and find educational opportunities that match their goals.
+            <p className="text-[#444] font-bold text-xs uppercase tracking-widest leading-relaxed max-w-sm mb-12">
+              Мы создаем будущее образования. Твой проводник в мир топовых университетов, элитной подготовки и неограниченных возможностей.
             </p>
+            <div className="flex items-center gap-6">
+               <div className="flex items-center gap-2 text-[9px] font-black text-[#222] uppercase tracking-[0.3em]">
+                  <Globe className="w-3 h-3" /> Global Network
+               </div>
+               <div className="flex items-center gap-2 text-[9px] font-black text-[#222] uppercase tracking-[0.3em]">
+                  <ShieldCheck className="w-3 h-3" /> Verified Status
+               </div>
+            </div>
           </div>
 
           <div>
-            <h3 className="font-semibold text-lg mb-4 text-background">Navigation</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/" className="text-muted hover:text-white transition-colors text-sm" data-testid="link-footer-home">Home</Link>
-              </li>
-              <li>
-                <Link to="/programs" className="text-muted hover:text-white transition-colors text-sm" data-testid="link-footer-programs">Programs & Camps</Link>
-              </li>
-              <li>
-                <Link to="/ielts" className="text-muted hover:text-white transition-colors text-sm" data-testid="link-footer-ielts">IELTS Prep</Link>
-              </li>
-              <li>
-                <Link to="/sat" className="text-muted hover:text-white transition-colors text-sm" data-testid="link-footer-sat">SAT Prep</Link>
-              </li>
-              <li>
-                <Link to="/admissions" className="text-muted hover:text-white transition-colors text-sm" data-testid="link-footer-admissions">Admissions Guide</Link>
-              </li>
+            <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em] mb-8">Navigation</h3>
+            <ul className="space-y-4">
+              {["Home", "Programs", "IELTS", "SAT", "Admissions"].map((item) => (
+                <li key={item}>
+                  <Link 
+                    to={item === "Home" ? "/" : `/${item.toLowerCase().replace(/ /g, '-')}`} 
+                    className="text-[10px] font-black text-[#444] hover:text-white uppercase tracking-[0.2em] transition-colors"
+                  >
+                    {item}.
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div>
-            <h3 className="font-semibold text-lg mb-4 text-background">Contact</h3>
-            <ul className="space-y-3 text-sm text-muted">
+            <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em] mb-8">Intelligence</h3>
+            <ul className="space-y-6">
               <li>
-                <a
-                  href="https://t.me/shikitoafk"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-white transition-colors flex items-center gap-2"
-                >
-                  <Send className="h-4 w-4" />
-                  @shikitoafk
+                <a href="https://t.me/shikitoafk" target="_blank" className="flex items-center gap-3 text-[10px] font-black text-[#444] hover:text-white transition-all group">
+                   <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors">
+                      <Send className="w-3 h-3" />
+                   </div>
+                   @SHIKITOAFK
+                </a>
+              </li>
+              <li>
+                <a href="https://t.me/Saubolopps" target="_blank" className="flex items-center gap-3 text-[10px] font-black text-[#444] hover:text-white transition-all group">
+                   <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors">
+                      <Send className="w-3 h-3" />
+                   </div>
+                   @SAUBOLOPPS
                 </a>
               </li>
             </ul>
-            <div className="mt-6">
-              <h4 className="font-semibold text-sm mb-3 text-background">Our Channel</h4>
-              <a
-                href="https://t.me/Saubolopps"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-muted hover:text-white transition-colors"
-              >
-                <Send className="h-4 w-4" />
-                t.me/Saubolopps
-              </a>
-            </div>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-muted-foreground/20 text-center md:text-left flex items-center justify-center md:justify-start">
-          <p className="text-muted text-xs">
-            © {new Date().getFullYear()} Saubol Global Education Gateway. All rights reserved.
+        <div className="mt-24 pt-12 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 opacity-30">
+          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-[#444]">
+            © {new Date().getFullYear()} Saubol Academic Systems.
           </p>
+          <div className="flex gap-8 text-[9px] font-black uppercase tracking-[0.4em]">
+             <span className="cursor-pointer hover:text-white transition-colors">Privacy</span>
+             <span className="cursor-pointer hover:text-white transition-colors">Terms</span>
+          </div>
         </div>
       </div>
+      
+      {/* Subtle Bottom Glow */}
+      <div className="absolute bottom-[-100px] left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-indigo-500/5 blur-[120px] rounded-full" />
     </footer>
   );
 }

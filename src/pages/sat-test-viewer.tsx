@@ -1,9 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { ChevronLeft, Loader2, Target } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const SATTestViewer = () => {
   const { section, slug } = useParams<{ section: string; slug: string }>();
   const navigate = useNavigate();
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
@@ -23,18 +26,42 @@ const SATTestViewer = () => {
   const testUrl = `/tests/sat/${section}/${slug}.html`;
 
   return (
-    <div className="fixed inset-0 z-50 bg-background">
-      <button
-        onClick={() => navigate("/sat")}
-        className="fixed top-4 left-4 z-[60] flex items-center gap-2 rounded-lg bg-card px-4 py-2 text-sm font-medium text-card-foreground shadow-lg border hover:bg-muted transition-colors"
-      >
-        ← Back to SAT
-      </button>
+    <div className="fixed inset-0 z-50 bg-[#000000] flex flex-col font-sans">
+      {/* Premium Header Wrapper */}
+      <div className="absolute top-6 left-6 z-[60] flex items-center gap-4">
+        <Button 
+          onClick={() => navigate("/sat")}
+          className="glass-3d px-6 py-3 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all border border-white/5"
+        >
+          <ChevronLeft className="w-4 h-4" /> Exit Session
+        </Button>
+        <div className="px-4 py-3 rounded-xl bg-white/5 border border-white/5 backdrop-blur-md hidden md:flex items-center gap-3">
+          <Target className="w-4 h-4 text-blue-400" />
+          <span className="text-[9px] font-black uppercase tracking-widest text-[#444]">High-Performance Mode</span>
+        </div>
+      </div>
+
+      {/* Loading Overlay */}
+      {!isLoaded && (
+        <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center">
+           <div className="bg-vignette opacity-50" />
+           <Loader2 className="w-12 h-12 animate-spin text-white mb-6 relative z-10" />
+           <p className="text-[10px] font-black uppercase tracking-[0.5em] text-[#444] relative z-10 animate-pulse">Launching SAT Test Environment</p>
+        </div>
+      )}
+
+      {/* Test Frame */}
       <iframe
         src={testUrl}
-        className="h-full w-full border-0"
+        onLoad={() => setIsLoaded(true)}
+        className={`h-full w-full border-0 transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         title="SAT Test"
       />
+      
+      {/* Bottom Status Bar */}
+      <div className="h-2 bg-blue-600/20 w-full overflow-hidden shrink-0">
+         <div className="h-full bg-blue-500 animate-shimmer" style={{ width: isLoaded ? '100%' : '30%' }} />
+      </div>
     </div>
   );
 };

@@ -3,12 +3,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Menu, User, LogOut, BarChart3 } from "lucide-react";
+import { Menu, User, LogOut, BarChart3, Send, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
 const links = [
-  { name: "Home", href: "/" },
   { name: "Programs", href: "/programs" },
   { name: "IELTS", href: "/ielts" },
   { name: "SAT", href: "/sat" },
@@ -20,184 +19,108 @@ export function Navbar() {
   const navigate = useNavigate();
   const { user, loading, signOut, signInWithGoogle } = useAuth();
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
-
-  const handleSignIn = async () => {
-    await signInWithGoogle();
-  };
-
   const getUserInitials = () => {
     if (user?.user_metadata?.full_name) {
-      return user.user_metadata.full_name
-        .split(' ')
-        .map((n: string) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
+      return user.user_metadata.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
     }
     return user?.email?.[0]?.toUpperCase() || 'U';
   };
 
-  const getUserName = () => {
-    return user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
-  };
-
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link to="/" className="flex items-center gap-2" data-testid="link-home-logo">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-xl">
+    <nav className="fixed top-0 z-[100] w-full bg-black/60 backdrop-blur-xl border-b border-white/5 h-20">
+      <div className="max-w-[1400px] mx-auto px-10 h-full flex items-center justify-between">
+        <div className="flex items-center gap-12">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white text-black font-black text-xl italic shadow-[0_0_20px_rgba(255,255,255,0.1)] group-hover:scale-110 transition-transform">
               S
             </div>
-            <span className="font-bold text-xl tracking-tight hidden sm:inline-block">
-              Saubol
+            <span className="font-black text-2xl tracking-tighter text-shimmer hidden sm:inline-block">
+              SAUBOL.
             </span>
           </Link>
+
+          <div className="hidden lg:flex items-center gap-8">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className={cn(
+                  "text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:text-white",
+                  location.pathname === link.href ? "text-white" : "text-[#444]"
+                )}
+              >
+                {link.name}
+              </Link>
+            ))}
+          </div>
         </div>
 
-        <div className="hidden md:flex items-center space-x-6">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              to={link.href}
-              data-testid={`link-nav-${link.name.toLowerCase()}`}
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                location.pathname === link.href ? "text-primary font-semibold" : "text-muted-foreground"
-              )}
-            >
-              {link.name}
-            </Link>
-          ))}
-          
-          {/* Auth Section */}
+        <div className="flex items-center gap-6">
           {!loading && (
-            <>
+            <div className="hidden lg:flex items-center gap-4">
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full ml-4">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
+                    <button className="flex items-center gap-3 glass-3d px-4 py-2 group">
+                      <div className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-black border border-indigo-500/20">
                         {getUserInitials()}
                       </div>
-                    </Button>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[#444] group-hover:text-white transition-colors">{user.user_metadata?.full_name?.split(' ')[0] || 'Member'}</span>
+                    </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <div className="flex items-center justify-start gap-2 p-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                        {getUserInitials()}
-                      </div>
-                      <div className="flex flex-col space-y-1 leading-none">
-                        <p className="font-medium">{getUserName()}</p>
-                        <p className="w-[200px] truncate text-sm text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
-                    </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate('/dashboard')} className="cursor-pointer">
-                      <BarChart3 className="mr-2 h-4 w-4" />
-                      <span>My Dashboard</span>
+                  <DropdownMenuContent className="w-56 bg-black border-white/10 text-white p-2" align="end">
+                    <DropdownMenuItem onClick={() => navigate('/dashboard')} className="p-3 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-white/5">
+                      <BarChart3 className="mr-2 h-4 w-4" /> Dashboard
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Sign out</span>
+                    <DropdownMenuSeparator className="bg-white/5" />
+                    <DropdownMenuItem onClick={signOut} className="p-3 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-white/5 text-rose-400">
+                      <LogOut className="mr-2 h-4 w-4" /> Sign Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button onClick={handleSignIn} variant="default" className="bg-primary text-primary-foreground font-medium ml-4 hover:bg-primary/90">
-                  Sign in
+                <Button onClick={signInWithGoogle} className="glass-3d px-6 h-10 text-[9px] font-black uppercase tracking-widest hover:bg-white/10">
+                   Sign In
                 </Button>
               )}
-            </>
+            </div>
           )}
           
-          <Button asChild variant="outline" className="font-medium ml-4" data-testid="btn-nav-contact">
+          <Button asChild className="hidden lg:flex glass-3d px-6 h-10 text-[9px] font-black uppercase tracking-widest bg-white text-black hover:bg-gray-100 border-none shadow-[0_10px_20px_rgba(255,255,255,0.05)]">
             <a href="https://t.me/shikitoafk" target="_blank" rel="noopener noreferrer">
-              Contact Us
+              Contact <Send className="w-3 h-3 ml-2" />
             </a>
           </Button>
-        </div>
 
-        <div className="md:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Menu" data-testid="btn-mobile-menu">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-              <div className="flex flex-col space-y-4 mt-8">
-                {links.map((link) => (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    data-testid={`link-mobile-nav-${link.name.toLowerCase()}`}
-                    className={cn(
-                      "text-lg font-medium p-2 rounded-md hover:bg-muted transition-colors",
-                      location.pathname === link.href ? "text-primary bg-primary/10" : "text-foreground"
-                    )}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-                
-                {/* Mobile Auth Section */}
-                {!loading && (
-                  <>
-                    {user ? (
-                      <>
-                        <div className="flex items-center gap-2 p-2 border-t pt-4">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                            {getUserInitials()}
-                          </div>
-                          <div className="flex flex-col">
-                            <p className="font-medium">{getUserName()}</p>
-                            <p className="text-sm text-muted-foreground truncate">
-                              {user.email}
-                            </p>
-                          </div>
-                        </div>
-                        <Button 
-                          onClick={() => navigate('/dashboard')} 
-                          variant="outline" 
-                          className="w-full justify-start"
-                        >
-                          <BarChart3 className="mr-2 h-4 w-4" />
-                          My Dashboard
-                        </Button>
-                        <Button 
-                          onClick={handleSignOut} 
-                          variant="outline" 
-                          className="w-full justify-start"
-                        >
-                          <LogOut className="mr-2 h-4 w-4" />
-                          Sign out
-                        </Button>
-                      </>
-                    ) : (
-                      <Button onClick={handleSignIn} className="mt-4 bg-primary text-primary-foreground w-full">
-                        Sign in
-                      </Button>
-                    )}
-                  </>
-                )}
-                
-                <Button asChild className="mt-4 bg-primary text-primary-foreground w-full" data-testid="btn-mobile-contact">
-                  <a href="https://t.me/shikitoafk" target="_blank" rel="noopener noreferrer">
-                    Contact Us
-                  </a>
+          <div className="lg:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-white">
+                  <Menu className="h-6 w-6" />
                 </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
+              </SheetTrigger>
+              <SheetContent side="right" className="bg-black border-white/10 text-white w-full">
+                <div className="flex flex-col gap-8 mt-20 px-6">
+                  {links.map((link) => (
+                    <Link
+                      key={link.href}
+                      to={link.href}
+                      className={cn(
+                        "text-2xl font-black uppercase tracking-tighter transition-all",
+                        location.pathname === link.href ? "text-shimmer" : "text-[#333]"
+                      )}
+                    >
+                      {link.name}.
+                    </Link>
+                  ))}
+                  <div className="h-px bg-white/5 my-4" />
+                  <Button onClick={() => user ? signOut() : signInWithGoogle()} className="w-full h-16 glass-3d font-black uppercase text-xs tracking-widest">
+                    {user ? "Sign Out" : "Sign In"}
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </div>
     </nav>
