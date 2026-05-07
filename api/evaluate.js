@@ -120,8 +120,8 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
     let apiResponse;
     const modelsToTry = [
       { name: 'gemini-2.5-flash', version: 'v1beta' },
-      { name: 'gemini-1.5-flash', version: 'v1' },
-      { name: 'gemini-1.5-pro', version: 'v1' }
+      { name: 'gemini-2.5-pro', version: 'v1beta' },
+      { name: 'gemini-2-flash', version: 'v1beta' }
     ];
 
     for (const model of modelsToTry) {
