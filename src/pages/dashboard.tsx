@@ -19,7 +19,9 @@ import {
   Award,
   Calendar,
   ArrowRight,
-  History
+  History,
+  Headphones,
+  Book
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -56,7 +58,12 @@ interface UserProgress {
     total: number;
     completed_at: string;
   }>;
-  avg_band_score: number;
+  ielts_stats: {
+    writing: number;
+    listening: number;
+    reading: number;
+    overall: number;
+  };
 }
 
 export default function Dashboard() {
@@ -159,8 +166,18 @@ export default function Dashboard() {
           dailyActivity.push({ date: dateStr, questions_answered: questionsAnswered });
         }
 
-        const avgBand = ieltsData.length > 0 
-          ? (ieltsData.reduce((acc, curr) => acc + (curr.score || 0), 0) / ieltsData.length / 10).toFixed(1)
+        const getAvgBySkill = (skill: string) => {
+          const filtered = ieltsData.filter(d => d.skill?.toLowerCase() === skill.toLowerCase());
+          if (filtered.length === 0) return 0;
+          return Number((filtered.reduce((acc, curr) => acc + (curr.score || 0), 0) / filtered.length / 10).toFixed(1));
+        };
+
+        const writingAvg = getAvgBySkill('writing');
+        const listeningAvg = getAvgBySkill('listening');
+        const readingAvg = getAvgBySkill('reading');
+        
+        const ieltsOverall = ieltsData.length > 0 
+          ? Number((ieltsData.reduce((acc, curr) => acc + (curr.score || 0), 0) / ieltsData.length / 10).toFixed(1))
           : 0;
 
         const progressDataObj: UserProgress = {
@@ -171,8 +188,13 @@ export default function Dashboard() {
           favorite_section: favoriteSection,
           recent_activity: recentActivity,
           daily_activity: dailyActivity,
-          ielts_activity: ieltsData.slice(0, 5),
-          avg_band_score: Number(avgBand)
+          ielts_activity: ieltsData.slice(0, 10),
+          ielts_stats: {
+            writing: writingAvg,
+            listening: listeningAvg,
+            reading: readingAvg,
+            overall: ieltsOverall
+          }
         };
         
         console.log('Dashboard: Progress calculated:', progressDataObj);
@@ -303,14 +325,51 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            <Card>
+          </div>
+
+          {/* IELTS Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card className="border-blue-100 bg-blue-50/20">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg. Band Score</CardTitle>
-                <PenTool className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium text-blue-900">IELTS Listening</CardTitle>
+                <Headphones className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{progress?.avg_band_score || 0}</div>
-                <p className="text-xs text-muted-foreground">IELTS Writing</p>
+                <div className="text-2xl font-bold text-blue-700">{progress?.ielts_stats?.listening || 0}</div>
+                <p className="text-xs text-blue-600/70">Average Band</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-emerald-100 bg-emerald-50/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-emerald-900">IELTS Reading</CardTitle>
+                <Book className="h-4 w-4 text-emerald-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-emerald-700">{progress?.ielts_stats?.reading || 0}</div>
+                <p className="text-xs text-emerald-600/70">Average Band</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-indigo-100 bg-indigo-50/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-indigo-900">IELTS Writing</CardTitle>
+                <PenTool className="h-4 w-4 text-indigo-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-indigo-700">{progress?.ielts_stats?.writing || 0}</div>
+                <p className="text-xs text-indigo-600/70">Average Band</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-900 text-white border-none shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-slate-300">IELTS Overall</CardTitle>
+                <Award className="h-4 w-4 text-yellow-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-white">{progress?.ielts_stats?.overall || 0}</div>
+                <p className="text-xs text-slate-400">Target: 7.5+</p>
               </CardContent>
             </Card>
           </div>
@@ -387,22 +446,43 @@ export default function Dashboard() {
                       </Button>
                     </div>
                   ) : (
-                    progress.ielts_activity.map((activity, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 hover:bg-indigo-50/30 transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold border border-indigo-200">
-                            {(activity.score / 10).toFixed(1)}
+                    progress.ielts_activity.map((activity, index) => {
+                      const isWriting = activity.skill?.toLowerCase() === 'writing';
+                      const isListening = activity.skill?.toLowerCase() === 'listening';
+                      const isReading = activity.skill?.toLowerCase() === 'reading';
+                      
+                      return (
+                        <div key={index} className="flex items-center justify-between p-4 hover:bg-indigo-50/30 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border ${
+                              isWriting ? 'bg-indigo-100 text-indigo-700 border-indigo-200' :
+                              isListening ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                              'bg-emerald-100 text-emerald-700 border-emerald-200'
+                            }`}>
+                              {isWriting && <PenTool className="h-4 w-4" />}
+                              {isListening && <Headphones className="h-4 w-4" />}
+                              {isReading && <Book className="h-4 w-4" />}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold text-slate-900">{activity.test_name}</p>
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full uppercase font-bold ${
+                                  isWriting ? 'bg-indigo-100 text-indigo-700' :
+                                  isListening ? 'bg-blue-100 text-blue-700' :
+                                  'bg-emerald-100 text-emerald-700'
+                                }`}>
+                                  {activity.skill}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500">{new Date(activity.completed_at).toLocaleDateString()} · Score: {(activity.score / 10).toFixed(1)}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-semibold text-slate-900">{activity.test_name}</p>
-                            <p className="text-xs text-slate-500">{new Date(activity.completed_at).toLocaleDateString()}</p>
-                          </div>
+                          <Button variant="ghost" size="sm" className="text-indigo-600" onClick={() => navigate(isWriting ? '/ielts/writing-checker' : '/ielts')}>
+                            View
+                          </Button>
                         </div>
-                        <Button variant="ghost" size="sm" className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-100" onClick={() => navigate('/ielts/writing-checker')}>
-                          View
-                        </Button>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </CardContent>
