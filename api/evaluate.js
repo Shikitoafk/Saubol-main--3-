@@ -74,9 +74,17 @@ Essay: ${essay}`;
     if (!text) return res.status(500).json({ error: 'Empty AI response' });
 
     const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/\{[\s\S]*\}/);
-    const jsonString = jsonMatch ? jsonMatch[1] || jsonMatch[0] : text;
+    const result = JSON.parse(jsonString);
 
-    return res.status(200).json(JSON.parse(jsonString));
+    // Manual calculation of overall score to ensure accuracy
+    if (result.scores) {
+      const { TR, CC, LR, GRA } = result.scores;
+      const calculated = (Number(TR) + Number(CC) + Number(LR) + Number(GRA)) / 4;
+      // Round to the nearest 0.5 (IELTS rule)
+      result.scores.overall = Math.round(calculated * 2) / 2;
+    }
+
+    return res.status(200).json(result);
 
   } catch (error) {
     console.error("API Crash:", error);
