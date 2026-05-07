@@ -24,6 +24,14 @@ interface UserProgress {
     date: string;
     questions_answered: number;
   }>;
+  ielts_activity: Array<{
+    test_name: string;
+    skill: string;
+    score: number;
+    total: number;
+    completed_at: string;
+  }>;
+  avg_band_score: number;
 }
 
 export default function Dashboard() {
@@ -57,28 +65,32 @@ export default function Dashboard() {
         console.log('Dashboard: User session found:', session.user.email);
         setUser(session.user);
 
-        // Fetch user progress from Supabase
-        console.log('Dashboard: Fetching user progress...');
+        // Fetch user progress (SAT)
         let progressData: any[] = [];
-        
         try {
-          const { data: data, error: progressError } = await supabase
+          const { data: sData, error: sError } = await supabase
             .from('user_progress')
             .select('*')
             .eq('user_id', session.user.id)
             .order('answered_at', { ascending: false });
-
-          if (progressError) {
-            console.error('Dashboard: Progress fetch error:', progressError);
-            // Table might not exist or other error - set empty data
-            progressData = [];
-          } else {
-            console.log('Dashboard: Progress data loaded:', data?.length || 0, 'records');
-            progressData = data || [];
-          }
-        } catch (fetchError) {
-          console.error('Dashboard: Fetch error:', fetchError);
-          progressData = [];
+          
+          if (!sError) progressData = sData || [];
+        } catch (e) {
+          console.error('Dashboard: SAT fetch error:', e);
+        }
+        
+        // Fetch IELTS progress
+        let ieltsData: any[] = [];
+        try {
+          const { data: iData, error: iError } = await supabase
+            .from('ielts_progress')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .order('completed_at', { ascending: false });
+          
+          if (!iError) ieltsData = iData || [];
+        } catch (e) {
+          console.error('Dashboard: IELTS fetch error:', e);
         }
 
         // Calculate stats with safe defaults
@@ -122,6 +134,10 @@ export default function Dashboard() {
           dailyActivity.push({ date: dateStr, questions_answered: questionsAnswered });
         }
 
+        const avgBand = ieltsData.length > 0 
+          ? (ieltsData.reduce((acc, curr) => acc + (curr.score || 0), 0) / ieltsData.length / 10).toFixed(1)
+          : 0;
+
         const progressDataObj: UserProgress = {
           total_questions: totalQuestions,
           correct_answers: correctAnswers,
@@ -129,7 +145,9 @@ export default function Dashboard() {
           current_streak: streak,
           favorite_section: favoriteSection,
           recent_activity: recentActivity,
-          daily_activity: dailyActivity
+          daily_activity: dailyActivity,
+          ielts_activity: ieltsData.slice(0, 5),
+          avg_band_score: Number(avgBand)
         };
         
         console.log('Dashboard: Progress calculated:', progressDataObj);
@@ -262,15 +280,57 @@ export default function Dashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Favorite Section</CardTitle>
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Avg. Band Score</CardTitle>
+                <PenTool className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{progress?.favorite_section || 'None'}</div>
-                <p className="text-xs text-muted-foreground">Most practiced</p>
+                <div className="text-2xl font-bold">{progress?.avg_band_score || 0}</div>
+                <p className="text-xs text-muted-foreground">IELTS Writing</p>
               </CardContent>
             </Card>
           </div>
+
+          {/* IELTS Writing Activity */}
+          <Card className="mb-8 overflow-hidden border-indigo-200">
+            <CardHeader className="bg-indigo-50/50 border-b border-indigo-100">
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-indigo-600" />
+                IELTS Writing History
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {(!progress?.ielts_activity || progress.ielts_activity.length === 0) ? (
+                  <div className="p-8 text-center">
+                    <p className="text-gray-500 mb-4">No IELTS writing checked yet.</p>
+                    <Button 
+                      onClick={() => navigate('/ielts/writing-checker')} 
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      Analyze First Essay →
+                    </Button>
+                  </div>
+                ) : (
+                  progress.ielts_activity.map((activity, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+                          {(activity.score / 10).toFixed(1)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">{activity.test_name}</p>
+                          <p className="text-xs text-slate-500">IELTS Writing · {new Date(activity.completed_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => navigate('/ielts/writing-checker')}>
+                        View Details
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Recent Activity */}
           <Card className="mb-8">
