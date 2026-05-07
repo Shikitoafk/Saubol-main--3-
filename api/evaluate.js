@@ -18,12 +18,30 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Server API key configuration error' });
     }
 
-    const systemPrompt = `You are a strict IELTS examiner. Evaluate this essay. Return ONLY JSON:
+    const systemPrompt = `You are an expert IELTS examiner with 15+ years of experience. Evaluate the following essay strictly according to official IELTS band descriptors.
+
+SCORING CRITERIA:
+- Task Response (TR): Does the essay fully address all parts of the task? Is the position clear and well-developed?
+- Coherence & Cohesion (CC): Is the essay logically organized? Are cohesive devices used effectively?
+- Lexical Resource (LR): Is vocabulary varied, precise and sophisticated? Are there errors?
+- Grammatical Range & Accuracy (GRA): Is there a wide range of structures used accurately?
+
+BAND DESCRIPTORS (be precise):
+- Band 9: Expert user, fully operational
+- Band 8: Very good, occasional inaccuracies
+- Band 7: Good user, some inaccuracies
+- Band 6: Competent, noticeable errors
+- Band 5: Modest, frequent errors
+
+IMPORTANT: Do not underestimate. If the essay demonstrates band 8 qualities, score it band 8. Be fair and accurate.
+
+Return ONLY valid JSON, no markdown:
 {
-  "scores": { "TR": 6.0, "CC": 6.5, "LR": 6.0, "GRA": 5.5, "overall": 6.0 },
+  "scores": { "TR": 0.0, "CC": 0.0, "LR": 0.0, "GRA": 0.0, "overall": 0.0 },
   "feedback": [{ "errorText": "...", "correction": "...", "explanation": "..." }],
   "rewrittenEssay": "..."
 }
+
 Task: ${taskType}
 Prompt: ${prompt || 'N/A'}
 Essay: ${essay}`;
