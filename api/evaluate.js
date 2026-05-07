@@ -133,9 +133,10 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
 
     let apiResponse;
     const modelsToTry = [
-      { name: 'gemini-1.5-flash', version: 'v1beta' },
-      { name: 'gemini-1.5-pro', version: 'v1beta' },
-      { name: 'gemini-1.5-flash-8b', version: 'v1beta' }
+      { name: 'gemini-2.0-flash', version: 'v1beta' },
+      { name: 'gemini-2.0-flash-001', version: 'v1beta' },
+      { name: 'gemini-2.0-pro-exp-0205', version: 'v1beta' },
+      { name: 'gemini-2.0-flash-lite-preview-0205', version: 'v1beta' }
     ];
 
     // Helper for IELTS overall rounding rules
