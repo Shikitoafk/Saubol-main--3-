@@ -7,6 +7,12 @@ export interface GeminiScores {
   LR: number;
   GRA: number;
   overall: number;
+  subScores?: {
+    tr: Record<string, number>;
+    cc: Record<string, number>;
+    lr: Record<string, number>;
+    gra: Record<string, number>;
+  };
 }
 
 export interface GeminiFeedback {
@@ -17,7 +23,13 @@ export interface GeminiFeedback {
 
 export interface GeminiResponse {
   scores: GeminiScores;
-  feedback: GeminiFeedback[];
+  feedback: {
+    tr: string;
+    cc: string;
+    lr: string;
+    gra: string;
+    sentences: GeminiFeedback[];
+  };
   rewrittenEssay: string;
   wordCount?: number;
   penaltyApplied?: string;
@@ -48,20 +60,31 @@ export async function evaluateEssayWithGemini(
 
     const raw = await response.json();
     
-    // Map the new strict structure back to the frontend format
     return {
       scores: {
-        TR: raw.trScore,
-        CC: raw.ccScore,
-        LR: raw.lrScore,
-        GRA: raw.graScore,
-        overall: raw.overallScore
+        TR: raw.tr.score,
+        CC: raw.cc.score,
+        LR: raw.lr.score,
+        GRA: raw.gra.score,
+        overall: raw.overallScore,
+        subScores: {
+          tr: raw.tr.subScores,
+          cc: raw.cc.subScores,
+          lr: raw.lr.subScores,
+          gra: raw.gra.subScores
+        }
       },
-      feedback: (raw.sentenceCorrections || []).map((c: any) => ({
-        errorText: c.original,
-        correction: c.correction,
-        explanation: c.reason
-      })),
+      feedback: {
+        tr: raw.tr.feedback,
+        cc: raw.cc.feedback,
+        lr: raw.lr.feedback,
+        gra: raw.gra.feedback,
+        sentences: (raw.sentenceCorrections || []).map((c: any) => ({
+          errorText: c.original,
+          correction: c.correction,
+          explanation: c.reason
+        }))
+      },
       rewrittenEssay: raw.rewrittenEssay || "Rewritten essay is being generated...",
       wordCount: raw.wordCount,
       penaltyApplied: raw.penaltyApplied

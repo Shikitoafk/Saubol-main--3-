@@ -10,7 +10,21 @@ export interface ScoringResult {
   grammaticalRange: number;
   overallBand: number;
   feedback: GeminiFeedback[];
+  detailedFeedback: {
+    tr: string;
+    cc: string;
+    lr: string;
+    gra: string;
+  };
+  subScores?: {
+    tr: Record<string, number>;
+    cc: Record<string, number>;
+    lr: Record<string, number>;
+    gra: Record<string, number>;
+  };
   rewrittenEssay: string;
+  wordCount?: number;
+  penaltyApplied?: string;
 }
 
 export class IELTSScoringEngine {
@@ -24,9 +38,6 @@ export class IELTSScoringEngine {
     this.essay = essay;
   }
 
-  /**
-   * Main scoring method - uses Gemini API for comprehensive evaluation
-   */
   async score(): Promise<ScoringResult> {
     const geminiResponse = await evaluateEssayWithGemini(this.taskType, this.prompt, this.essay);
 
@@ -36,8 +47,17 @@ export class IELTSScoringEngine {
       lexicalResource: geminiResponse.scores.LR,
       grammaticalRange: geminiResponse.scores.GRA,
       overallBand: geminiResponse.scores.overall,
-      feedback: geminiResponse.feedback,
+      feedback: geminiResponse.feedback.sentences,
+      detailedFeedback: {
+        tr: geminiResponse.feedback.tr,
+        cc: geminiResponse.feedback.cc,
+        lr: geminiResponse.feedback.lr,
+        gra: geminiResponse.feedback.gra,
+      },
+      subScores: geminiResponse.scores.subScores,
       rewrittenEssay: geminiResponse.rewrittenEssay,
+      wordCount: geminiResponse.wordCount,
+      penaltyApplied: geminiResponse.penaltyApplied,
     };
   }
 }

@@ -180,56 +180,94 @@ const IELTSSWritingChecker = () => {
           <div className="space-y-6 animate-in fade-in duration-500">
             {/* Band Score Card */}
             <div className="bg-card rounded-lg border p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                Estimated Band Score
-              </h3>
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  Estimated Band Score
+                </h3>
+                {result.wordCount && (
+                  <div className="text-sm px-3 py-1 bg-muted rounded-full font-medium">
+                    {result.wordCount} words
+                  </div>
+                )}
+              </div>
               <div className="flex items-center gap-4">
                 <div className="text-5xl font-bold text-primary">{result.bandScore}</div>
                 <div className="text-muted-foreground">out of 9.0</div>
               </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                Based on the 4 official IELTS Band Descriptors (TR, CC, LR, GRA).
-              </p>
+              {result.penaltyApplied && result.penaltyApplied !== "None" && (
+                <div className="mt-3 p-2 bg-red-50 text-red-700 text-xs rounded border border-red-100 flex items-center gap-2">
+                  <AlertCircle className="h-3 w-3" />
+                  Penalty Applied: {result.penaltyApplied}
+                </div>
+              )}
             </div>
 
-            {/* 4 Criteria Scores */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {/* Task Response */}
-              <div className="bg-card rounded-lg border p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <FileText className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm font-medium">Task Response</span>
+            {/* 4 Criteria Scores with Detailed Feedback */}
+            <div className="grid gap-6">
+              {[
+                { 
+                  id: 'tr',
+                  label: "Task Response", 
+                  score: result.taskResponse, 
+                  icon: <FileText className="h-4 w-4 text-blue-500" />,
+                  feedback: result.detailedFeedback.tr,
+                  subs: result.subScores?.tr
+                },
+                { 
+                  id: 'cc',
+                  label: "Coherence & Cohesion", 
+                  score: result.coherenceCohesion, 
+                  icon: <MessageSquare className="h-4 w-4 text-green-500" />,
+                  feedback: result.detailedFeedback.cc,
+                  subs: result.subScores?.cc
+                },
+                { 
+                  id: 'lr',
+                  label: "Lexical Resource", 
+                  score: result.lexicalResource, 
+                  icon: <BookOpen className="h-4 w-4 text-purple-500" />,
+                  feedback: result.detailedFeedback.lr,
+                  subs: result.subScores?.lr
+                },
+                { 
+                  id: 'gra',
+                  label: "Grammatical Range", 
+                  score: result.grammaticalRange, 
+                  icon: <Code className="h-4 w-4 text-amber-500" />,
+                  feedback: result.detailedFeedback.gra,
+                  subs: result.subScores?.gra
+                }
+              ].map((item) => (
+                <div key={item.id} className="bg-card rounded-lg border overflow-hidden">
+                  <div className="p-4 border-b bg-muted/30 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      {item.icon}
+                      <span className="font-semibold">{item.label}</span>
+                    </div>
+                    <div className="text-xl font-bold text-primary">{item.score}</div>
+                  </div>
+                  <div className="p-4 grid gap-4 md:grid-cols-3">
+                    <div className="md:col-span-2">
+                      <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Examiner Feedback</h4>
+                      <p className="text-sm leading-relaxed">{item.feedback}</p>
+                    </div>
+                    <div className="bg-muted/50 p-3 rounded-md">
+                      <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Sub-criteria</h4>
+                      <div className="space-y-2">
+                        {item.subs && Object.entries(item.subs).map(([key, val]) => (
+                          <div key={key} className="flex justify-between items-center text-xs">
+                            <span className="text-muted-foreground">
+                              {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                            </span>
+                            <span className="font-bold">{val}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-2xl font-bold text-primary">{result.taskResponse}</div>
-              </div>
-
-              {/* Coherence & Cohesion */}
-              <div className="bg-card rounded-lg border p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <MessageSquare className="h-4 w-4 text-green-500" />
-                  <span className="text-sm font-medium">Coherence & Cohesion</span>
-                </div>
-                <div className="text-2xl font-bold text-primary">{result.coherenceCohesion}</div>
-              </div>
-
-              {/* Lexical Resource */}
-              <div className="bg-card rounded-lg border p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <BookOpen className="h-4 w-4 text-purple-500" />
-                  <span className="text-sm font-medium">Lexical Resource</span>
-                </div>
-                <div className="text-2xl font-bold text-primary">{result.lexicalResource}</div>
-              </div>
-
-              {/* Grammatical Range */}
-              <div className="bg-card rounded-lg border p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Code className="h-4 w-4 text-amber-500" />
-                  <span className="text-sm font-medium">Grammatical Range</span>
-                </div>
-                <div className="text-2xl font-bold text-primary">{result.grammaticalRange}</div>
-              </div>
+              ))}
             </div>
 
             {/* Grammar & Vocabulary Feedback */}
