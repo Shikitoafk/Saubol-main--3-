@@ -1,7 +1,6 @@
-// Vercel Serverless Function for IELTS Essay Evaluation
-// Using vanilla JS style to avoid type-related invocation failures
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log("Evaluate API called. Method:", req.method);
   
   try {
@@ -64,7 +63,7 @@ Essay: ${essay}`;
       });
     }
 
-    const data = await apiResponse.json();
+    const data = await apiResponse.json() as any;
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
@@ -87,11 +86,11 @@ Essay: ${essay}`;
       });
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Critical API Error:", error);
     return res.status(500).json({ 
       error: 'Internal Server Error',
-      message: error.message 
+      message: error.message || 'Unknown error'
     });
   }
 }
