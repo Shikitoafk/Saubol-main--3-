@@ -19,6 +19,8 @@ export interface GeminiResponse {
   scores: GeminiScores;
   feedback: GeminiFeedback[];
   rewrittenEssay: string;
+  wordCount?: number;
+  penaltyApplied?: string;
 }
 
 export async function evaluateEssayWithGemini(
@@ -44,8 +46,26 @@ export async function evaluateEssayWithGemini(
       throw new Error(errorData.error || `API error: ${response.statusText}`);
     }
 
-    const parsedResponse: GeminiResponse = await response.json();
-    return parsedResponse;
+    const raw = await response.json();
+    
+    // Map the new strict structure back to the frontend format
+    return {
+      scores: {
+        TR: raw.trScore,
+        CC: raw.ccScore,
+        LR: raw.lrScore,
+        GRA: raw.graScore,
+        overall: raw.overallScore
+      },
+      feedback: (raw.sentenceCorrections || []).map((c: any) => ({
+        errorText: c.original,
+        correction: c.correction,
+        explanation: c.reason
+      })),
+      rewrittenEssay: raw.rewrittenEssay || "Rewritten essay is being generated...",
+      wordCount: raw.wordCount,
+      penaltyApplied: raw.penaltyApplied
+    };
   } catch (error) {
     console.error('Essay evaluation error:', error);
     throw error;

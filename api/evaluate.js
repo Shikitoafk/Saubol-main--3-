@@ -18,33 +18,43 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Server API key configuration error' });
     }
 
-    const systemPrompt = `You are an expert IELTS examiner with 15+ years of experience. Evaluate the following essay strictly according to official IELTS band descriptors.
+    const systemPrompt = `You are an uncompromising, highly strict IELTS Writing Examiner. Your role is to evaluate IELTS essays submitted by users. You must grade strictly according to the official IELTS Writing Key Assessment Criteria without any leniency.
 
-SCORING CRITERIA:
-- Task Response (TR): Does the essay fully address all parts of the task? Is the position clear and well-developed?
-- Coherence & Cohesion (CC): Is the essay logically organized? Are cohesive devices used effectively?
-- Lexical Resource (LR): Is vocabulary varied, precise and sophisticated? Are there errors?
-- Grammatical Range & Accuracy (GRA): Is there a wide range of structures used accurately?
+You will receive:
+1. TASK_TYPE:[Task 1 Academic / Task 1 General / Task 2]
+2. TASK_PROMPT: The specific question/graph/letter the user is answering.
+3. USER_ESSAY: The text written by the user.
 
-BAND DESCRIPTORS (be precise):
-- Band 9: Expert user, fully operational
-- Band 8: Very good, occasional inaccuracies
-- Band 7: Good user, some inaccuracies
-- Band 6: Competent, noticeable errors
-- Band 5: Modest, frequent errors
+EVALUATION PROCESS:
+1. Penalty & Format Check: Word count (150 for Task 1, 250 for Task 2). Penalize bullet points or memorized text.
+2. Task Achievement / Task Response: Check if all parts of the prompt are fully addressed and developed.
+3. Coherence and Cohesion: Evaluate paragraphing, logical progression, and natural use of linking words.
+4. Lexical Resource: Look for unnatural word choices. If a student uses "big words" incorrectly, DO NOT give them more than a 6.0 for LR.
+5. Grammatical Range and Accuracy: Check sentence complexity and punctuation.
 
-IMPORTANT: Do not underestimate. If the essay demonstrates band 8 qualities, score it band 8. Be fair and accurate.
-
-Return ONLY valid JSON, no markdown:
+OUTPUT FORMAT:
+You MUST output your response ONLY as a valid JSON object with the following structure. Do NOT wrap it in markdown code blocks, just raw JSON:
 {
-  "scores": { "TR": 0.0, "CC": 0.0, "LR": 0.0, "GRA": 0.0, "overall": 0.0 },
-  "feedback": [{ "errorText": "...", "correction": "...", "explanation": "..." }],
-  "rewrittenEssay": "..."
-}
+  "wordCount": 0,
+  "penaltyApplied": "None",
+  "trScore": 0.0,
+  "trFeedback": "string",
+  "ccScore": 0.0,
+  "ccFeedback": "string",
+  "lrScore": 0.0,
+  "lrFeedback": "string",
+  "graScore": 0.0,
+  "graFeedback": "string",
+  "sentenceCorrections":[
+    {
+      "original": "string",
+      "correction": "string",
+      "reason": "string"
+    }
+  ]
+}`;
 
-Task: ${taskType}
-Prompt: ${prompt || 'N/A'}
-Essay: ${essay}`;
+    const userMessage = `TASK_TYPE: ${taskType}\nTASK_PROMPT: ${prompt || 'N/A'}\nUSER_ESSAY: ${essay}`;
 
     const apiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
@@ -52,8 +62,15 @@ Essay: ${essay}`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: systemPrompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
+          contents: [
+            { role: 'user', parts: [{ text: systemPrompt }] },
+            { role: 'user', parts: [{ text: userMessage }] }
+          ],
+          generationConfig: { 
+            temperature: 0.1, 
+            maxOutputTokens: 8192,
+            response_mime_type: "application/json"
+          }
         })
       }
     );
@@ -73,16 +90,30 @@ Essay: ${essay}`;
 
     if (!text) return res.status(500).json({ error: 'Empty AI response' });
 
-    const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/\{[\s\S]*\}/);
-    const result = JSON.parse(jsonString);
+    const result = JSON.parse(text);
 
-    // Manual calculation of overall score to ensure accuracy
-    if (result.scores) {
-      const { TR, CC, LR, GRA } = result.scores;
-      const calculated = (Number(TR) + Number(CC) + Number(LR) + Number(GRA)) / 4;
-      // Round to the nearest 0.5 (IELTS rule)
-      result.scores.overall = Math.round(calculated * 2) / 2;
-    }
+    // TASK 4: Backend Math for Overall Score
+    const calculateIeltsOverall = (tr, cc, lr, gra) => {
+      const avg = (Number(tr) + Number(cc) + Number(lr) + Number(gra)) / 4;
+      const decimal = avg % 1;
+      const integer = Math.floor(avg);
+
+      if (decimal === 0.25) return integer + 0.5;
+      if (decimal === 0.75) return integer + 1.0;
+      if ([0.125, 0.375, 0.625, 0.875].includes(decimal)) {
+        return Math.floor(avg * 2) / 2; // Round DOWN to nearest 0.5
+      }
+      
+      // Standard rounding for other cases (though usually IELTS only has .25 increments)
+      return Math.round(avg * 2) / 2;
+    };
+
+    result.overallScore = calculateIeltsOverall(
+      result.trScore, 
+      result.ccScore, 
+      result.lrScore, 
+      result.graScore
+    );
 
     return res.status(200).json(result);
 
