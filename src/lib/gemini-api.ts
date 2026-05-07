@@ -31,7 +31,8 @@ export interface GeminiResponse {
 export async function evaluateEssayWithGemini(
   taskType: string,
   prompt: string,
-  essay: string
+  essay: string,
+  imageBase64?: string
 ): Promise<GeminiResponse> {
   try {
     const response = await fetch('/api/evaluate', {
@@ -43,6 +44,7 @@ export async function evaluateEssayWithGemini(
         taskType,
         prompt,
         essay,
+        imageBase64
       }),
     });
 

@@ -31,15 +31,22 @@ export class IELTSScoringEngine {
   private taskType: "task1" | "task2";
   private prompt: string;
   private essay: string;
+  private imageBase64?: string;
 
-  constructor(taskType: "task1" | "task2", prompt: string, essay: string) {
+  constructor(taskType: "task1" | "task2", prompt: string, essay: string, imageBase64?: string) {
     this.taskType = taskType;
     this.prompt = prompt;
     this.essay = essay;
+    this.imageBase64 = imageBase64;
   }
 
   async score(): Promise<ScoringResult> {
-    const geminiResponse = await evaluateEssayWithGemini(this.taskType, this.prompt, this.essay);
+    const geminiResponse = await evaluateEssayWithGemini(
+      this.taskType, 
+      this.prompt, 
+      this.essay, 
+      this.imageBase64
+    );
 
     return {
       taskResponse: geminiResponse.scores.TR,

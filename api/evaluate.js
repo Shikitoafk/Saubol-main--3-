@@ -7,7 +7,7 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { taskType, prompt, essay } = req.body || {};
+    const { taskType, prompt, essay, imageBase64 } = req.body || {};
     if (!essay || !taskType) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -27,8 +27,9 @@ Your evaluation must be realistic. DO NOT be overly harsh.
 
 You will receive:
 1. TASK_TYPE
-2. TASK_PROMPT
-3. USER_ESSAY
+2. TASK_PROMPT (Text description)
+3. USER_ESSAY (The student's writing)
+4. IMAGE (Optional photo of the chart/table/prompt)
 
 EVALUATION PROCESS:
 Step 1: Analyze Task Achievement (Task 1) / Task Response (Task 2).
@@ -96,6 +97,19 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
 
     const callGemini = async (modelName, apiVersion = 'v1beta') => {
       console.log(`Trying Gemini model: ${modelName} via ${apiVersion}`);
+      
+      const parts = [{ text: userMessage }];
+      
+      if (imageBase64) {
+        console.log("Adding image to Gemini request...");
+        parts.push({
+          inline_data: {
+            mime_type: "image/jpeg",
+            data: imageBase64.split(',')[1] || imageBase64
+          }
+        });
+      }
+
       const response = await fetch(
         `https://generativelanguage.googleapis.com/${apiVersion}/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`,
         {
@@ -104,7 +118,7 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
           body: JSON.stringify({
             contents: [
               { role: 'user', parts: [{ text: systemPrompt }] },
-              { role: 'user', parts: [{ text: userMessage }] }
+              { role: 'user', parts: parts }
             ],
             generationConfig: { 
               temperature: 0.1, 

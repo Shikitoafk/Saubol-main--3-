@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Layout } from "@/components/layout";
-import { Brain, Loader2, CheckCircle2, AlertCircle, ChevronLeft, BookOpen, FileText, MessageSquare, Code } from "lucide-react";
+import { Brain, Loader2, CheckCircle2, AlertCircle, ChevronLeft, BookOpen, FileText, MessageSquare, Code, Download, Image as ImageIcon, X } from "lucide-react";
 import IELTSScoringEngine, { ScoringResult } from "@/lib/ielts-scoring-engine";
 import { supabase } from "@/lib/supabase";
 
@@ -22,6 +22,7 @@ const IELTSSWritingChecker = () => {
   const [prompt, setPrompt] = useState("");
   const [essay, setEssay] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [taskImage, setTaskImage] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
 
   const handleAnalyze = async () => {
@@ -31,7 +32,7 @@ const IELTSSWritingChecker = () => {
 
     try {
       // Initialize scoring engine with Gemini API
-      const engine = new IELTSScoringEngine(taskType, prompt, essay);
+      const engine = new IELTSScoringEngine(taskType, prompt, essay, taskImage || undefined);
       
       // Use Gemini API for comprehensive evaluation
       const scoringResult = await engine.score();
@@ -42,8 +43,12 @@ const IELTSSWritingChecker = () => {
         coherenceCohesion: scoringResult.coherenceCohesion,
         lexicalResource: scoringResult.lexicalResource,
         grammaticalRange: scoringResult.grammaticalRange,
+        detailedFeedback: scoringResult.detailedFeedback,
+        subScores: scoringResult.subScores,
         grammarErrors: scoringResult.feedback,
         rewrittenEssay: scoringResult.rewrittenEssay,
+        wordCount: scoringResult.wordCount,
+        penaltyApplied: scoringResult.penaltyApplied
       });
 
       // Save to Supabase
@@ -72,6 +77,99 @@ const IELTSSWritingChecker = () => {
       alert('Error analyzing essay. Please try again.');
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 4 * 1024 * 1024) {
+        alert("Image is too large. Please use a file smaller than 4MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTaskImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    if (!result) return;
+    
+    try {
+      const { jsPDF } = (window as any).jspdf;
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFontSize(22);
+      doc.setTextColor(15, 23, 42); // slate-900
+      doc.text("Saubol IELTS Assessment Report", 20, 20);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Generated on ${new Date().toLocaleDateString()}`, 20, 28);
+      
+      // Main Score
+      doc.setFontSize(16);
+      doc.setTextColor(15, 23, 42);
+      doc.text(`Overall Band Score: ${result.bandScore}`, 20, 45);
+      doc.setFontSize(10);
+      doc.text(`Word Count: ${result.wordCount || 'N/A'}`, 20, 52);
+      
+      // Scores Table
+      (doc as any).autoTable({
+        startY: 60,
+        head: [['Criterion', 'Score']],
+        body: [
+          ['Task Response', result.taskResponse],
+          ['Coherence & Cohesion', result.coherenceCohesion],
+          ['Lexical Resource', result.lexicalResource],
+          ['Grammatical Range', result.grammaticalRange],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [59, 130, 246] } // blue-500
+      });
+      
+      let currentY = (doc as any).lastAutoTable.finalY + 15;
+      
+      // Feedback Sections
+      const criteria = [
+        { label: "Task Response", feedback: result.detailedFeedback.tr },
+        { label: "Coherence & Cohesion", feedback: result.detailedFeedback.cc },
+        { label: "Lexical Resource", feedback: result.detailedFeedback.lr },
+        { label: "Grammatical Range", feedback: result.detailedFeedback.gra }
+      ];
+      
+      criteria.forEach(item => {
+        if (currentY > 250) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text(item.label, 20, currentY);
+        currentY += 7;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        const splitText = doc.splitTextToSize(item.feedback, 170);
+        doc.text(splitText, 20, currentY);
+        currentY += (splitText.length * 5) + 10;
+      });
+
+      // Original Essay
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Original Essay", 20, currentY);
+      currentY += 7;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      const splitEssay = doc.splitTextToSize(essay, 170);
+      doc.text(splitEssay, 20, currentY);
+      
+      doc.save(`IELTS_Report_Saubol_${new Date().getTime()}.pdf`);
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      alert("Could not generate PDF. Please try again.");
     }
   };
 
@@ -141,6 +239,27 @@ const IELTSSWritingChecker = () => {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
             />
+            {taskType === "task1" && (
+              <div className="mt-2">
+                {!taskImage ? (
+                  <label className="flex items-center gap-2 px-3 py-2 border border-dashed rounded-md cursor-pointer hover:bg-muted/50 transition-colors text-xs font-medium text-muted-foreground">
+                    <ImageIcon className="h-3 w-3" />
+                    Upload Task Photo (Graph/Chart)
+                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                  </label>
+                ) : (
+                  <div className="relative inline-block">
+                    <img src={taskImage} alt="Task" className="h-20 w-32 object-cover rounded border" />
+                    <button 
+                      onClick={() => setTaskImage(null)}
+                      className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-1 shadow-sm"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Essay Input */}
@@ -191,9 +310,18 @@ const IELTSSWritingChecker = () => {
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-4">
-                <div className="text-5xl font-bold text-primary">{result.bandScore}</div>
-                <div className="text-muted-foreground">out of 9.0</div>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="text-5xl font-bold text-primary">{result.bandScore}</div>
+                  <div className="text-muted-foreground">out of 9.0</div>
+                </div>
+                <button
+                  onClick={handleDownloadPDF}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium shadow-sm"
+                >
+                  <Download className="h-4 w-4" />
+                  Download PDF Report
+                </button>
               </div>
               {result.penaltyApplied && result.penaltyApplied !== "None" && (
                 <div className="mt-3 p-2 bg-red-50 text-red-700 text-xs rounded border border-red-100 flex items-center gap-2">
