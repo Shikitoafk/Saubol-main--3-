@@ -97,6 +97,9 @@ body.night .choice.wrong { background: #2d0b0b; }
   .nav-panel { position: relative; }
 }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
 </head>
 <body class="day">
 
@@ -480,7 +483,12 @@ function renderQuestion(idx) {
     leftHtml += `<hr class="divider"><div class="passage-label">Research Notes</div><div class="passage-text"><p><strong>Note A:</strong> ${q.notesA}</p><p><strong>Note B:</strong> ${q.notesB}</p><p><strong>Note C:</strong> ${q.notesC}</p><p><strong>Note D:</strong> ${q.notesD}</p></div>`;
   }
   if (q.chartNote) {
-    leftHtml += `<hr class="divider"><div class="passage-label">Data</div><div class="passage-text"><p><em>${q.chartNote}</em></p></div>`;
+    leftHtml += `<hr class="divider">
+    <div class="passage-label">Data Visual / Chart</div>
+    <div style="background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:16px; margin:10px 0; font-family:'Courier New', monospace; font-size:0.9rem;">
+      <div style="text-align:center; font-weight:700; margin-bottom:10px; text-transform:uppercase; font-size:0.75rem; color:var(--muted);">Information Card</div>
+      <p style="line-height:1.6; color:var(--text);">${q.chartNote.replace(/\[Chart: |\[Graph: |\]/g, '')}</p>
+    </div>`;
   }
   lp.innerHTML = leftHtml || '<div class="passage-text" style="color:var(--muted);font-style:italic">No additional context provided.</div>';
 
@@ -506,6 +514,18 @@ function renderQuestion(idx) {
     <div class="${explCls}" id="explanation">💡 ${q.explanation}</div>
   </div>`;
   updateNav();
+
+  // Re-render math
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false},
+        {left: '\\(', right: '\\)', display: false},
+        {left: '\\[', right: '\\]', display: true}
+      ]
+    });
+  }
 }
 
 function selectChoice(ci) {

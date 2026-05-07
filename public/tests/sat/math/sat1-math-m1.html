@@ -12,6 +12,8 @@
   --nav-active: #2563eb; --nav-done: #d1fae5; --nav-done-text: #065f46;
   --timer-warn: #f59e0b; --timer-danger: #ef4444;
 }
+/* KaTeX adjustment */
+.katex { font-size: 1.1em; }
 body.night { --bg: #0f172a; --surface: #1e293b; --text: #e2e8f0; --muted: #94a3b8; --border: #334155; --primary-light: #1e3a5f; --option-hover: #1e3a5f; }
 body.sepia { --bg: #f5efe0; --surface: #fdf6e3; --text: #5c4b37; --muted: #8a7560; --border: #d6c9b0; --option-hover: #ece3d0; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -94,6 +96,9 @@ body.night .choice.wrong { background: #2d0b0b; }
   .nav-panel { position: relative; }
 }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
 </head>
 <body class="day">
 
@@ -316,19 +321,26 @@ function renderQuestion(idx) {
   const rp = document.getElementById('right-pane');
 
   // Left pane: reference or visual
-  lp.innerHTML = `<div class="reference-box">
-    <h4>Reference</h4>
-    <div class="ref-formula">Area of circle: A = πr²</div>
-    <div class="ref-formula">Circumference: C = 2πr</div>
-    <div class="ref-formula">Pythagorean: a² + b² = c²</div>
-    <div class="ref-formula">Area of triangle: A = ½bh</div>
-    <div class="ref-formula">Area of rectangle: A = lw</div>
-    <div class="ref-formula">Volume of box: V = lwh</div>
-    <div class="ref-formula">Volume of cylinder: V = πr²h</div>
-    <div class="ref-formula">Quadratic formula:</div>
-    <div class="ref-formula">x = (−b ± √(b²−4ac)) / 2a</div>
+  let leftContent = '';
+  
+  if (q.graphic) {
+    leftContent += `<div class="math-graphic">${q.graphic}</div>`;
+  }
+
+  leftContent += `<div class="reference-box" style="padding: 10px; opacity: 0.8; font-size: 0.85rem;">
+    <h4 style="margin-bottom: 5px;">Reference</h4>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+      <div class="ref-formula">A = πr²</div>
+      <div class="ref-formula">C = 2πr</div>
+      <div class="ref-formula">c² = a² + b²</div>
+      <div class="ref-formula">A = ½bh</div>
+      <div class="ref-formula">V = lwh</div>
+      <div class="ref-formula">V = πr²h</div>
+    </div>
   </div>
   <div class="formula-note">Note: Calculator not allowed on Module 1</div>`;
+  
+  lp.innerHTML = leftContent;
 
   // Right pane: question
   let questionHtml = '';
@@ -366,6 +378,18 @@ function renderQuestion(idx) {
   }
   rp.innerHTML = questionHtml;
   updateNav();
+  
+  // Re-render math
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false},
+        {left: '\\(', right: '\\)', display: false},
+        {left: '\\[', right: '\\]', display: true}
+      ]
+    });
+  }
 }
 
 function selectChoice(ci) {
