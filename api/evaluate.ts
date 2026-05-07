@@ -4,23 +4,28 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  try {
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
 
-  const { taskType, prompt, essay } = req.body;
+    const { taskType, prompt, essay } = req.body;
 
-  if (!essay || !taskType) {
-    return res.status(400).json({ error: 'Missing required fields: essay and taskType' });
-  }
+    if (!essay || !taskType) {
+      return res.status(400).json({ error: 'Missing required fields: essay and taskType' });
+    }
 
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-  if (!GEMINI_API_KEY) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
-  }
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    if (!GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY is not defined in environment variables');
+      return res.status(500).json({ 
+        error: 'GEMINI_API_KEY not configured',
+        tip: 'Please add GEMINI_API_KEY to your Vercel Environment Variables.'
+      });
+    }
 
-  const systemPrompt = `You are a strict, professional IELTS examiner. Evaluate the following essay based on the official TR, CC, LR, and GRA rubrics. Return ONLY a valid JSON object with this exact structure:
+    const systemPrompt = `You are a strict, professional IELTS examiner. Evaluate the following essay based on the official TR, CC, LR, and GRA rubrics. Return ONLY a valid JSON object with this exact structure:
 {
   "scores": { "TR": 6.0, "CC": 6.5, "LR": 6.0, "GRA": 5.5, "overall": 6.0 },
   "feedback": [
@@ -33,8 +38,7 @@ Task Type: ${taskType.toUpperCase()}
 Prompt: ${prompt || 'N/A'}
 Essay: ${essay}`;
 
-  try {
-    const response = await fetch(
+    const apiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
@@ -61,34 +65,39 @@ Essay: ${essay}`;
       }
     );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
-      return res.status(response.status).json({ 
-        error: `Gemini API error: ${response.statusText}`,
+    if (!apiResponse.ok) {
+      const errorText = await apiResponse.text();
+      return res.status(apiResponse.status).json({ 
+        error: `Gemini API error: ${apiResponse.statusText}`,
         details: errorText
       });
     }
 
-    const data = await response.json();
-    const text = data.candidates[0]?.content?.parts[0]?.text;
+    const data = await apiResponse.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
-      return res.status(500).json({ error: 'No response text from Gemini API' });
+      return res.status(500).json({ error: 'No response text from Gemini API', raw: data });
     }
 
     // Extract JSON from the response (handle potential markdown code blocks)
     const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/\{[\s\S]*\}/);
     const jsonString = jsonMatch ? jsonMatch[1] || jsonMatch[0] : text;
 
-    const parsedResponse = JSON.parse(jsonString);
-
-    return res.status(200).json(parsedResponse);
+    try {
+      const parsedResponse = JSON.parse(jsonString);
+      return res.status(200).json(parsedResponse);
+    } catch (parseError) {
+      return res.status(500).json({ 
+        error: 'Failed to parse AI response as JSON',
+        rawText: text
+      });
+    }
   } catch (error) {
-    console.error('Serverless function error:', error);
+    console.error('Critical serverless function error:', error);
     return res.status(500).json({ 
-      error: 'Failed to evaluate essay',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Internal Server Error',
+      message: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 }
