@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/protected-route";
 import NotFound from "@/pages/not-found";
+import { Analytics } from "@vercel/analytics/react";
 
 import Home from "@/pages/home";
 import Programs from "@/pages/programs";
@@ -46,6 +47,7 @@ function App() {
             </Routes>
           </BrowserRouter>
           <Toaster />
+          <Analytics />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
