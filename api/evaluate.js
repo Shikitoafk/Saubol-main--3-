@@ -13,6 +13,8 @@ export default async function handler(req, res) {
     }
 
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    const GEMINI_API_KEY2 = process.env.GEMINI_API_KEY2;
+
     if (!GEMINI_API_KEY) {
       console.error("GEMINI_API_KEY missing");
       return res.status(500).json({ error: 'Server API key configuration error' });
@@ -95,8 +97,8 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
 
     const userMessage = `TASK_TYPE: ${taskType}\nTASK_PROMPT: ${prompt || 'N/A'}\nUSER_ESSAY: ${essay}`;
 
-    const callGemini = async (modelName, apiVersion = 'v1beta') => {
-      console.log(`Trying Gemini model: ${modelName} via ${apiVersion}`);
+    const callGemini = async (modelName, apiKey, apiVersion = 'v1beta') => {
+      console.log(`Trying Gemini model: ${modelName} via ${apiVersion} using key ${apiKey.substring(0, 5)}...`);
       
       const parts = [{ text: userMessage }];
       
@@ -111,7 +113,7 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
       }
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/${apiVersion}/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/${apiVersion}/models/${modelName}:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -153,42 +155,50 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
       return Math.round(avg * 2) / 2; // Standard 0.5 rounding
     };
 
+    const apiKeys = [GEMINI_API_KEY, GEMINI_API_KEY2].filter(Boolean);
+
     for (const model of modelsToTry) {
-      const apiResponse = await callGemini(model.name, model.version);
-      
-      if (apiResponse.ok) {
-        const data = await apiResponse.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      for (const key of apiKeys) {
+        const apiResponse = await callGemini(model.name, key, model.version);
         
-        if (text) {
-          try {
-            // Clean markdown if AI wrapped it in ```json ... ```
-            const cleanText = text.replace(/```json|```/g, "").trim();
-            const result = JSON.parse(cleanText);
+        if (apiResponse.ok) {
+          const data = await apiResponse.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          
+          if (text) {
+            try {
+              // Clean markdown if AI wrapped it in ```json ... ```
+              const cleanText = text.replace(/```json|```/g, "").trim();
+              const result = JSON.parse(cleanText);
 
-            // Add overall score
-            result.overallScore = calculateIeltsOverall(
-              result.tr.score, 
-              result.cc.score, 
-              result.lr.score, 
-              result.gra.score
-            );
+              // Add overall score
+              result.overallScore = calculateIeltsOverall(
+                result.tr.score, 
+                result.cc.score, 
+                result.lr.score, 
+                result.gra.score
+              );
 
-            return res.status(200).json(result);
-          } catch (parseErr) {
-            console.warn(`Model ${model.name} returned invalid JSON:`, parseErr.message);
+              return res.status(200).json(result);
+            } catch (parseErr) {
+              console.warn(`Model ${model.name} with key ${key.substring(0,5)} returned invalid JSON:`, parseErr.message);
+            }
           }
+          console.warn(`Model ${model.name} with key ${key.substring(0,5)} returned empty content, trying next key/model...`);
+        } else {
+          const errorData = await apiResponse.json().catch(() => ({}));
+          console.warn(`Model ${model.name} with key ${key.substring(0,5)} failed with ${apiResponse.status}:`, JSON.stringify(errorData));
+          
+          const isRateLimited = apiResponse.status === 429;
+          const isOverloaded = apiResponse.status === 503;
+          const isNotFound = apiResponse.status === 404;
+          
+          if (isRateLimited || isOverloaded || isNotFound) {
+            console.log(`Switching due to ${apiResponse.status}...`);
+            continue; // Try next key for THIS model, or next model
+          }
+          break; // Stop for other fatal errors (e.g. 400 Bad Request)
         }
-        console.warn(`Model ${model.name} returned empty content or invalid format, trying next...`);
-      } else {
-        const errorData = await apiResponse.json().catch(() => ({}));
-        console.warn(`Model ${model.name} failed with ${apiResponse.status}:`, JSON.stringify(errorData));
-        
-        const isOverloaded = apiResponse.status === 503 || apiResponse.status === 429;
-        const isNotFound = apiResponse.status === 404;
-        
-        if (isOverloaded || isNotFound) continue;
-        break; // Stop for other fatal errors
       }
     }
 
