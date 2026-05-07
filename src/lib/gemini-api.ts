@@ -59,36 +59,45 @@ export async function evaluateEssayWithGemini(
     }
 
     const raw = await response.json();
+    console.log('API Raw Response:', raw);
     
-    // Safety check: Ensure raw has the expected structure
-    if (!raw || !raw.tr || !raw.cc || !raw.lr || !raw.gra) {
-      console.error('Invalid API response structure:', raw);
-      throw new Error(raw.error || 'The AI response was incomplete. This usually happens during high server load. Please try again.');
+    // Hard safety check with detailed logging
+    if (!raw || typeof raw !== 'object') {
+      throw new Error('AI returned an invalid response format.');
+    }
+
+    // Check for main criteria objects
+    const required = ['tr', 'cc', 'lr', 'gra'];
+    for (const key of required) {
+      if (!raw[key] || typeof raw[key] !== 'object') {
+        console.error(`Missing or invalid criteria object: ${key}`, raw);
+        throw new Error(`The AI evaluation was incomplete (missing ${key.toUpperCase()}). Please try again.`);
+      }
     }
     
     return {
       scores: {
-        TR: raw.tr.score,
-        CC: raw.cc.score,
-        LR: raw.lr.score,
-        GRA: raw.gra.score,
-        overall: raw.overallScore,
+        TR: raw.tr.score || 0,
+        CC: raw.cc.score || 0,
+        LR: raw.lr.score || 0,
+        GRA: raw.gra.score || 0,
+        overall: raw.overallScore || 0,
         subScores: {
-          tr: raw.tr.subScores,
-          cc: raw.cc.subScores,
-          lr: raw.lr.subScores,
-          gra: raw.gra.subScores
+          tr: raw.tr.subScores || {},
+          cc: raw.cc.subScores || {},
+          lr: raw.lr.subScores || {},
+          gra: raw.gra.subScores || {}
         }
       },
       feedback: {
-        tr: raw.tr.feedback,
-        cc: raw.cc.feedback,
-        lr: raw.lr.feedback,
-        gra: raw.gra.feedback,
+        tr: raw.tr.feedback || "No feedback provided.",
+        cc: raw.cc.feedback || "No feedback provided.",
+        lr: raw.lr.feedback || "No feedback provided.",
+        gra: raw.gra.feedback || "No feedback provided.",
         sentences: (raw.sentenceCorrections || []).map((c: any) => ({
-          errorText: c.original,
-          correction: c.correction,
-          explanation: c.reason
+          errorText: c.original || "",
+          correction: c.correction || "",
+          explanation: c.reason || ""
         }))
       },
       rewrittenEssay: raw.rewrittenEssay || "Rewritten essay is being generated...",
