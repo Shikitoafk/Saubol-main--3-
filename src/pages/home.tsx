@@ -8,41 +8,48 @@ import {
   ChevronRight,
   Headphones,
   LayoutDashboard,
-  Clock
+  Clock,
+  Zap,
+  Sparkles
 } from 'lucide-react';
 
 export default function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#000000] text-white selection:bg-white/10 font-sans">
+    <div className="min-h-screen bg-[#000000] text-white selection:bg-white/10 font-sans relative overflow-hidden">
+      {/* 3D Background Elements */}
+      <div className="bg-vignette" />
+      <div className="bg-sphere top-[-10%] left-[-5%] opacity-40 animate-pulse" />
+      <div className="bg-sphere bottom-[-10%] right-[-5%] opacity-30" style={{ background: 'radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%)' }} />
+
       {/* Header */}
-      <header className="relative z-50 border-b border-[#222] bg-[#000000]/80 backdrop-blur-xl sticky top-0">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
-              <span className="font-bold text-black text-xl">S</span>
+      <header className="relative z-50 border-b border-white/5 bg-black/40 backdrop-blur-2xl sticky top-0">
+        <div className="max-w-[1400px] mx-auto px-10 h-24 flex items-center justify-between">
+          <div className="flex items-center gap-4 group cursor-pointer" onClick={() => navigate('/')}>
+            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.1)] group-hover:scale-110 transition-transform duration-500">
+              <span className="font-bold text-black text-2xl italic">S</span>
             </div>
-            <span className="text-xl font-semibold tracking-tight">Saubol</span>
+            <span className="text-2xl font-bold tracking-tighter">SAUBOL</span>
           </div>
           
-          <nav className="hidden md:flex items-center gap-10 text-sm font-medium text-[#888]">
-            <a href="#" className="hover:text-white transition-colors">Programs</a>
-            <a href="#" className="hover:text-white transition-colors">IELTS</a>
-            <a href="#" className="hover:text-white transition-colors">SAT</a>
-            <a href="#" className="hover:text-white transition-colors">Admissions</a>
+          <nav className="hidden lg:flex items-center gap-12 text-sm font-bold tracking-widest text-[#666] uppercase">
+            <a href="#" className="hover:text-white transition-all hover:tracking-[0.2em]">Programs</a>
+            <a href="#" className="hover:text-white transition-all hover:tracking-[0.2em]">IELTS</a>
+            <a href="#" className="hover:text-white transition-all hover:tracking-[0.2em]">SAT</a>
+            <a href="#" className="hover:text-white transition-all hover:tracking-[0.2em]">Admissions</a>
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <Button 
               variant="ghost" 
-              className="text-[#888] hover:text-white hover:bg-white/5 font-medium"
+              className="text-[#666] hover:text-white hover:bg-white/5 font-bold tracking-widest uppercase text-xs"
               onClick={() => navigate('/login')}
             >
               Log In
             </Button>
             <Button 
-              className="bg-white text-black hover:bg-gray-200 rounded-lg px-6 font-semibold h-10"
+              className="bg-white text-black hover:bg-gray-200 rounded-xl px-8 font-black h-12 shadow-[0_10px_20px_rgba(255,255,255,0.1)] hover:shadow-[0_15px_30px_rgba(255,255,255,0.2)] transition-all uppercase tracking-tighter"
               onClick={() => navigate('/dashboard')}
             >
               Dashboard
@@ -52,155 +59,143 @@ export default function Home() {
       </header>
 
       <main className="relative z-10">
-        {/* Hero Section */}
-        <section className="pt-40 pb-24 px-6">
-          <div className="max-w-5xl mx-auto">
-            <h1 className="text-6xl md:text-8xl font-semibold tracking-tight mb-8 leading-[1.05] max-w-4xl">
-              Education for the <br />
-              <span className="text-[#888]">Top Performers.</span>
+        {/* Hero Section - Wider and 3D */}
+        <section className="pt-48 pb-32 px-10">
+          <div className="max-w-[1400px] mx-auto">
+            <div className="flex items-center gap-3 mb-10 opacity-60">
+              <Sparkles className="w-5 h-5 text-blue-400" />
+              <span className="text-xs font-black tracking-[0.4em] uppercase text-blue-400">Elite Education 2026</span>
+            </div>
+            <h1 className="text-7xl md:text-[120px] font-black tracking-tighter mb-12 leading-[0.85] text-shimmer">
+              BEYOND THE <br />
+              LIMITS.
             </h1>
-            <p className="text-xl text-[#888] max-w-xl mb-12 leading-relaxed font-medium">
-              Персонализированная подготовка к SAT и IELTS, подбор программ и аналитика для поступления в лучшие вузы мира.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <Button 
-                size="lg" 
-                className="bg-white text-black hover:bg-gray-200 rounded-lg px-8 h-14 text-base font-semibold"
-                onClick={() => navigate('/signup')}
-              >
-                Начать обучение <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="border-[#222] bg-transparent hover:bg-white/5 rounded-lg px-8 h-14 text-base font-semibold transition-all"
-              >
-                Узнать подробнее
-              </Button>
+            <div className="grid md:grid-cols-2 gap-20 items-end">
+              <p className="text-2xl text-[#888] leading-relaxed font-medium max-w-xl">
+                Персонализированная подготовка нового поколения. Мы не просто учим — мы проектируем твое будущее в лучших университетах мира.
+              </p>
+              <div className="flex items-center gap-6">
+                <Button 
+                  size="lg" 
+                  className="bg-white text-black hover:bg-gray-100 rounded-2xl px-12 h-20 text-xl font-black transition-all hover:scale-105 active:scale-95 shadow-[0_20px_40px_rgba(255,255,255,0.15)]"
+                  onClick={() => navigate('/signup')}
+                >
+                  START NOW <ArrowRight className="ml-3 w-6 h-6" />
+                </Button>
+                <div className="hidden sm:block group cursor-pointer">
+                   <div className="w-20 h-20 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/5 transition-colors">
+                      <Zap className="w-8 h-8 text-white group-hover:scale-125 transition-transform" />
+                   </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Pro Modules Section */}
-        <section className="py-24 px-6 max-w-7xl mx-auto border-t border-[#222]">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            {/* IELTS Module */}
-            <div className="md:col-span-8 bg-[#0A0A0A] border border-[#222] p-12 rounded-2xl flex flex-col justify-between min-h-[450px] hover:border-[#444] transition-all group cursor-pointer" onClick={() => navigate('/ielts')}>
-              <div className="max-w-xl">
-                <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-8 border border-[#222]">
-                  <Headphones className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-4xl font-semibold mb-6">IELTS Intensive</h3>
-                <p className="text-[#888] text-xl leading-relaxed">
-                  Профессиональная подготовка с использованием AI-аналитики для Writing, Reading и Listening.
-                </p>
-              </div>
-              <div className="flex items-center gap-12 mt-8 pt-8 border-t border-[#222]">
-                 <div className="flex items-center gap-3">
-                    <Clock className="w-5 h-5 text-[#444]" />
-                    <span className="text-sm font-medium text-[#888]">Adaptive Learning</span>
-                 </div>
-                 <div className="flex items-center gap-3">
-                    <Target className="w-5 h-5 text-[#444]" />
-                    <span className="text-sm font-medium text-[#888]">Expert Feedback</span>
-                 </div>
-              </div>
-            </div>
-
-            {/* SAT Module */}
-            <div className="md:col-span-4 bg-[#0A0A0A] border border-[#222] p-12 rounded-2xl flex flex-col justify-between min-h-[450px] hover:border-[#444] transition-all group cursor-pointer" onClick={() => navigate('/sat')}>
+        {/* 3D Feature Grid - Spacious */}
+        <section className="py-32 px-10 max-w-[1400px] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* IELTS Module - Huge and 3D */}
+            <div className="lg:col-span-7 glass-3d p-16 flex flex-col justify-between min-h-[600px] group cursor-pointer" onClick={() => navigate('/ielts')}>
               <div>
-                <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-8 border border-[#222]">
-                  <Target className="w-6 h-6 text-white" />
+                <div className="flex justify-between items-start mb-12">
+                   <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20 group-hover:bg-white/20 transition-colors">
+                      <Headphones className="w-8 h-8 text-white" />
+                   </div>
+                   <span className="text-xs font-black tracking-[0.3em] uppercase text-indigo-400">Advanced Module</span>
                 </div>
-                <h3 className="text-3xl font-semibold mb-6">SAT Practice</h3>
-                <p className="text-[#888] text-lg">
-                  Полная база адаптивных тестов 2026 года.
+                <h3 className="text-6xl font-black mb-8 leading-tight">IELTS <br /> INTENSIVE</h3>
+                <p className="text-[#888] text-2xl leading-relaxed max-w-lg">
+                  Глубокая аналитика Writing и адаптивные тренировки Listening/Reading. Твой путь к 8.5+ начинается здесь.
                 </p>
               </div>
-              <Button variant="ghost" className="p-0 h-auto font-semibold text-white hover:text-gray-300 w-fit group text-lg">
-                View Modules <ChevronRight className="ml-1 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </div>
-
-            {/* Admissions */}
-            <div className="md:col-span-6 bg-[#0A0A0A] border border-[#222] p-12 rounded-2xl flex flex-col justify-between min-h-[350px] hover:border-[#444] transition-all cursor-pointer" onClick={() => navigate('/admissions')}>
-              <div className="max-w-md">
-                <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-8 border border-[#222]">
-                  <Globe className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-3xl font-semibold mb-6">Admissions</h3>
-                <p className="text-[#888] text-lg">
-                  Полное сопровождение в университеты Ivy League и Европы.
-                </p>
+              <div className="flex items-center gap-12 mt-12 pt-12 border-t border-white/5">
+                 <div className="flex flex-col gap-1">
+                    <span className="text-3xl font-black text-white">99%</span>
+                    <span className="text-xs font-bold text-[#444] uppercase tracking-widest">Success Rate</span>
+                 </div>
+                 <div className="flex flex-col gap-1">
+                    <span className="text-3xl font-black text-white">AI</span>
+                    <span className="text-xs font-bold text-[#444] uppercase tracking-widest">Engine Powered</span>
+                 </div>
               </div>
             </div>
 
-            {/* AI Search */}
-            <div className="md:col-span-6 bg-[#0A0A0A] border border-[#222] p-12 rounded-2xl flex flex-col justify-between min-h-[350px] hover:border-[#444] transition-all">
-              <div className="max-w-md">
-                <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-8 border border-[#222]">
-                  <Brain className="w-6 h-6 text-white" />
+            {/* SAT Module - 3D */}
+            <div className="lg:col-span-5 glass-3d p-16 flex flex-col justify-between min-h-[600px] group cursor-pointer" onClick={() => navigate('/sat')}>
+              <div>
+                <div className="flex justify-between items-start mb-12">
+                   <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20 group-hover:bg-white/20 transition-colors">
+                      <Target className="w-8 h-8 text-white" />
+                   </div>
                 </div>
-                <h3 className="text-3xl font-semibold mb-6">AI Matchmaker</h3>
-                <p className="text-[#888] text-lg">
-                  Умный подбор программ на основе твоего текущего уровня.
+                <h3 className="text-5xl font-black mb-8 leading-tight">SAT <br /> MASTERY</h3>
+                <p className="text-[#888] text-xl leading-relaxed">
+                  Адаптивные тесты нового поколения. Мы анализируем каждый твой клик, чтобы ускорить прогресс.
                 </p>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-8 border border-white/5 group-hover:border-white/20 transition-all">
+                 <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-[#666] uppercase tracking-widest">Next Session</span>
+                    <ChevronRight className="w-6 h-6 text-white group-hover:translate-x-2 transition-transform" />
+                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Minimal CTA */}
-        <section className="py-40 px-6 border-t border-[#222]">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-5xl md:text-7xl font-semibold mb-12">Ready to start?</h2>
+        {/* Shimmer CTA */}
+        <section className="section-spacing px-10">
+          <div className="max-w-[1400px] mx-auto glass-3d p-24 text-center relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+            <h2 className="text-6xl md:text-9xl font-black mb-16 tracking-tighter text-shimmer">DREAM BIG.</h2>
             <Button 
               size="lg" 
-              className="bg-white text-black hover:bg-gray-200 rounded-lg px-12 h-16 text-lg font-bold transition-all"
+              className="bg-white text-black hover:bg-gray-100 rounded-2xl px-16 h-24 text-2xl font-black shadow-[0_30px_60px_rgba(255,255,255,0.1)] transition-all hover:scale-110 active:scale-95"
               onClick={() => navigate('/signup')}
             >
-              Get Access Now
+              GET FULL ACCESS
             </Button>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-[#222] py-24 px-6 bg-[#000000]">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-16">
-          <div className="max-w-sm">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center">
-                <span className="font-bold text-black text-xl">S</span>
+      {/* Footer - Wide and Pro */}
+      <footer className="border-t border-white/5 py-32 px-10 bg-black relative z-10">
+        <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row justify-between gap-32">
+          <div className="max-w-md">
+            <div className="flex items-center gap-4 mb-10">
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center">
+                <span className="font-bold text-black text-2xl italic">S</span>
               </div>
-              <span className="text-2xl font-semibold tracking-tight">Saubol</span>
+              <span className="text-3xl font-black tracking-tighter">SAUBOL</span>
             </div>
-            <p className="text-[#888] text-lg leading-relaxed">
-              Excellence in educational technologies. Designed for those who seek high results.
+            <p className="text-[#666] text-xl leading-relaxed font-medium">
+              Architecting the next generation of global leaders. Precision, intelligence, and excellence in every module.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-20">
+          <div className="grid grid-cols-2 gap-32">
             <div>
-              <h4 className="font-semibold mb-8 text-white uppercase tracking-widest text-xs">Products</h4>
-              <ul className="space-y-4 text-[#888] font-medium">
-                <li><a href="#" className="hover:text-white transition-colors" onClick={() => navigate('/ielts')}>IELTS Checker</a></li>
-                <li><a href="#" className="hover:text-white transition-colors" onClick={() => navigate('/sat')}>SAT Modules</a></li>
-                <li><a href="#" className="hover:text-white transition-colors" onClick={() => navigate('/programs')}>AI Matchmaker</a></li>
+              <h4 className="text-xs font-black mb-10 text-white uppercase tracking-[0.4em]">Products</h4>
+              <ul className="space-y-6 text-[#444] font-bold text-sm uppercase tracking-widest">
+                <li><a href="#" className="hover:text-white transition-colors">IELTS Intensive</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">SAT Mastery</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">AI Search</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-8 text-white uppercase tracking-widest text-xs">Company</h4>
-              <ul className="space-y-4 text-[#888] font-medium">
-                <li><a href="#" className="hover:text-white transition-colors">About</a></li>
+              <h4 className="text-xs font-black mb-10 text-white uppercase tracking-[0.4em]">Connect</h4>
+              <ul className="space-y-6 text-[#444] font-bold text-sm uppercase tracking-widest">
+                <li><a href="#" className="hover:text-white transition-colors">Instagram</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">LinkedIn</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Legal</a></li>
               </ul>
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto mt-24 pt-12 border-t border-[#222] text-sm text-[#444] font-medium">
-          © 2026 Saubol. All rights reserved.
+        <div className="max-w-[1400px] mx-auto mt-32 pt-16 border-t border-white/5 flex justify-between items-center text-[10px] font-black text-[#222] uppercase tracking-[0.5em]">
+          <span>© 2026 Saubol International</span>
+          <span>Designed for Excellence</span>
         </div>
       </footer>
     </div>

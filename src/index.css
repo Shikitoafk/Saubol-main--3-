@@ -185,60 +185,90 @@
   color-scheme: dark;
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-black: #000000;
+  --bg-panel: rgba(10, 10, 10, 0.7);
+  --text-white: #FFFFFF;
+  --text-dim: #999999;
+  --accent-blue: #007AFF;
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-glow: rgba(255, 255, 255, 0.05);
+  
+  font-family: 'Outfit', sans-serif;
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
-  background-color: var(--bg-pure);
-  color: var(--text-main);
+  background-color: var(--bg-black);
+  color: var(--text-white);
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Minimalist Card */
-.pro-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-thin);
-  border-radius: 12px;
-  transition: all 0.2s ease-in-out;
+/* 3D Glass Effect */
+.glass-3d {
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 
+    inset 0 1px 1px rgba(255,255,255,0.1),
+    0 10px 30px rgba(0,0,0,0.5);
+  border-radius: 24px;
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.pro-card:hover {
-  border-color: var(--border-active);
-  background: var(--bg-card-hover);
+.glass-3d:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(255,255,255,0.3);
+  box-shadow: 
+    inset 0 1px 1px rgba(255,255,255,0.2),
+    0 20px 40px rgba(0,0,0,0.7);
 }
 
-/* Sophisticated Typography */
-h1, h2, h3 {
-  font-weight: 600;
-  letter-spacing: -0.03em;
+/* Shimmer Animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-.heading-xl {
-  font-size: clamp(3rem, 8vw, 6rem);
-  line-height: 0.95;
+.text-shimmer {
+  background: linear-gradient(90deg, #fff 0%, #666 50%, #fff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 6s infinite linear;
 }
 
-/* Clean UI Elements */
-.btn-pro {
-  background: var(--text-main);
-  color: var(--bg-pure);
-  font-weight: 600;
-  padding: 12px 24px;
-  border-radius: 8px;
-  transition: opacity 0.2s;
+/* Layout Fix: Wide & Spacious */
+.container-wide {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 40px;
 }
 
-.btn-pro:hover {
-  opacity: 0.9;
+.section-spacing {
+  padding-top: 120px;
+  padding-bottom: 120px;
 }
 
-.btn-outline {
-  border: 1px solid var(--border-thin);
-  color: var(--text-main);
-  background: transparent;
+/* 3D Depth Background */
+.bg-vignette {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%);
+  pointer-events: none;
 }
 
-.btn-outline:hover {
-  background: var(--bg-card);
-  border-color: var(--border-active);
+.bg-sphere {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(0, 122, 255, 0.08) 0%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
 }
 
 @layer utilities {
