@@ -95,8 +95,8 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
     const userMessage = `TASK_TYPE: ${taskType}\nTASK_PROMPT: ${prompt || 'N/A'}\nUSER_ESSAY: ${essay}`;
 
     const callGemini = async (modelName, apiVersion = 'v1beta') => {
-      console.log(`Calling Gemini model: ${modelName} via ${apiVersion}`);
-      return await fetch(
+      console.log(`Trying Gemini model: ${modelName} via ${apiVersion}`);
+      const response = await fetch(
         `https://generativelanguage.googleapis.com/${apiVersion}/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`,
         {
           method: 'POST',
@@ -114,22 +114,40 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
           })
         }
       );
+      return response;
     };
 
-    // PRIMARY: Gemini 3.1 Flash
-    let apiResponse = await callGemini('gemini-3.1-flash', 'v1beta');
+    let apiResponse;
+    const modelsToTry = [
+      { name: 'gemini-2.5-flash', version: 'v1beta' },
+      { name: 'gemini-1.5-flash', version: 'v1' },
+      { name: 'gemini-1.5-pro', version: 'v1' }
+    ];
 
-    // FALLBACK: If 3.1 is overloaded, try 2.5 Flash
-    if (apiResponse.status === 503 || apiResponse.status === 429) {
-      console.warn(`Gemini 3.1 is ${apiResponse.status}. Falling back to 2.5 Flash...`);
-      apiResponse = await callGemini('gemini-2.5-flash', 'v1beta');
+    for (const model of modelsToTry) {
+      apiResponse = await callGemini(model.name, model.version);
+      
+      // If success, break the loop
+      if (apiResponse.ok) break;
+      
+      // If error is not 503/429 (overload), but 404 (not found), try next model immediately
+      const isOverloaded = apiResponse.status === 503 || apiResponse.status === 429;
+      const isNotFound = apiResponse.status === 404;
+      
+      if (isOverloaded || isNotFound) {
+        console.warn(`Model ${model.name} failed with ${apiResponse.status}. Trying next...`);
+        continue;
+      }
+      
+      // For other critical errors, stop and report
+      break;
     }
 
     if (!apiResponse.ok) {
       const errorData = await apiResponse.text();
-      console.error("Gemini API Error details:", apiResponse.status, errorData);
+      console.error("All Gemini models failed:", apiResponse.status, errorData);
       return res.status(apiResponse.status).json({ 
-        error: 'Gemini API is currently overloaded. Please try again in a few seconds.', 
+        error: 'Gemini AI is currently unavailable after multiple attempts. Please try again later.', 
         status: apiResponse.status,
         details: errorData 
       });
