@@ -133,49 +133,12 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
 
     let apiResponse;
     const modelsToTry = [
-      { name: 'gemini-2.5-flash', version: 'v1beta' },
-      { name: 'gemini-2.5-pro', version: 'v1beta' },
-      { name: 'gemini-2.0-flash-exp', version: 'v1beta' },
-      { name: 'gemini-2.0-pro-exp', version: 'v1beta' }
+      { name: 'gemini-1.5-flash', version: 'v1beta' },
+      { name: 'gemini-1.5-pro', version: 'v1beta' },
+      { name: 'gemini-1.5-flash-8b', version: 'v1beta' }
     ];
 
-    for (const model of modelsToTry) {
-      apiResponse = await callGemini(model.name, model.version);
-      
-      // If success, break the loop
-      if (apiResponse.ok) break;
-      
-      // If error is not 503/429 (overload), but 404 (not found), try next model immediately
-      const isOverloaded = apiResponse.status === 503 || apiResponse.status === 429;
-      const isNotFound = apiResponse.status === 404;
-      
-      if (isOverloaded || isNotFound) {
-        console.warn(`Model ${model.name} failed with ${apiResponse.status}. Trying next...`);
-        continue;
-      }
-      
-      // For other critical errors, stop and report
-      break;
-    }
-
-    if (!apiResponse.ok) {
-      const errorData = await apiResponse.text();
-      console.error("All Gemini models failed:", apiResponse.status, errorData);
-      return res.status(apiResponse.status).json({ 
-        error: 'Gemini AI is currently unavailable after multiple attempts. Please try again later.', 
-        status: apiResponse.status,
-        details: errorData 
-      });
-    }
-
-    const data = await apiResponse.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!text) return res.status(500).json({ error: 'Empty AI response' });
-
-    const result = JSON.parse(text);
-
-    // TASK 4: Backend Math for Overall Score
+    // Helper for IELTS overall rounding rules
     const calculateIeltsOverall = (tr, cc, lr, gra) => {
       const avg = (Number(tr) + Number(cc) + Number(lr) + Number(gra)) / 4;
       const decimal = avg % 1;
@@ -186,18 +149,52 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
       if ([0.125, 0.375, 0.625, 0.875].includes(decimal)) {
         return Math.floor(avg * 2) / 2; // Round DOWN to nearest 0.5
       }
-      
-      return Math.round(avg * 2) / 2;
+      return Math.round(avg * 2) / 2; // Standard 0.5 rounding
     };
 
-    result.overallScore = calculateIeltsOverall(
-      result.tr.score, 
-      result.cc.score, 
-      result.lr.score, 
-      result.gra.score
-    );
+    for (const model of modelsToTry) {
+      const apiResponse = await callGemini(model.name, model.version);
+      
+      if (apiResponse.ok) {
+        const data = await apiResponse.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (text) {
+          try {
+            // Clean markdown if AI wrapped it in ```json ... ```
+            const cleanText = text.replace(/```json|```/g, "").trim();
+            const result = JSON.parse(cleanText);
 
-    return res.status(200).json(result);
+            // Add overall score
+            result.overallScore = calculateIeltsOverall(
+              result.tr.score, 
+              result.cc.score, 
+              result.lr.score, 
+              result.gra.score
+            );
+
+            return res.status(200).json(result);
+          } catch (parseErr) {
+            console.warn(`Model ${model.name} returned invalid JSON:`, parseErr.message);
+          }
+        }
+        console.warn(`Model ${model.name} returned empty content or invalid format, trying next...`);
+      } else {
+        const errorData = await apiResponse.json().catch(() => ({}));
+        console.warn(`Model ${model.name} failed with ${apiResponse.status}:`, JSON.stringify(errorData));
+        
+        const isOverloaded = apiResponse.status === 503 || apiResponse.status === 429;
+        const isNotFound = apiResponse.status === 404;
+        
+        if (isOverloaded || isNotFound) continue;
+        break; // Stop for other fatal errors
+      }
+    }
+
+    return res.status(503).json({ 
+      error: 'Gemini AI is currently unavailable. All available models failed to process the request.',
+      details: 'Check Vercel logs for specific model errors.'
+    });
 
   } catch (error) {
     console.error("API Crash:", error);
