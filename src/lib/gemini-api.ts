@@ -60,6 +60,12 @@ export async function evaluateEssayWithGemini(
 
     const raw = await response.json();
     
+    // Safety check: Ensure raw has the expected structure
+    if (!raw || !raw.tr || !raw.cc || !raw.lr || !raw.gra) {
+      console.error('Invalid API response structure:', raw);
+      throw new Error(raw.error || 'The AI response was incomplete. This usually happens during high server load. Please try again.');
+    }
+    
     return {
       scores: {
         TR: raw.tr.score,

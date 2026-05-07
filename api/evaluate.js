@@ -94,30 +94,41 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
 
     const userMessage = `TASK_TYPE: ${taskType}\nTASK_PROMPT: ${prompt || 'N/A'}\nUSER_ESSAY: ${essay}`;
 
-    const apiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            { role: 'user', parts: [{ text: systemPrompt }] },
-            { role: 'user', parts: [{ text: userMessage }] }
-          ],
-          generationConfig: { 
-            temperature: 0.1, 
-            maxOutputTokens: 8192,
-            response_mime_type: "application/json"
-          }
-        })
-      }
-    );
+    const callGemini = async (modelName) => {
+      console.log(`Calling Gemini model: ${modelName}`);
+      return await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              { role: 'user', parts: [{ text: systemPrompt }] },
+              { role: 'user', parts: [{ text: userMessage }] }
+            ],
+            generationConfig: { 
+              temperature: 0.1, 
+              maxOutputTokens: 8192,
+              response_mime_type: "application/json"
+            }
+          })
+        }
+      );
+    };
+
+    let apiResponse = await callGemini('gemini-2.5-flash');
+
+    // FALLBACK: If 2.5 is overloaded (503), try 1.5 Flash
+    if (apiResponse.status === 503) {
+      console.warn("Gemini 2.5 is overloaded. Falling back to 1.5 Flash...");
+      apiResponse = await callGemini('gemini-1.5-flash');
+    }
 
     if (!apiResponse.ok) {
       const errorData = await apiResponse.text();
       console.error("Gemini API Error details:", apiResponse.status, errorData);
       return res.status(apiResponse.status).json({ 
-        error: 'Gemini API error', 
+        error: 'Gemini API is currently overloaded or unavailable. Please try again in a few seconds.', 
         status: apiResponse.status,
         details: errorData 
       });
