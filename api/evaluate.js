@@ -94,10 +94,10 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
 
     const userMessage = `TASK_TYPE: ${taskType}\nTASK_PROMPT: ${prompt || 'N/A'}\nUSER_ESSAY: ${essay}`;
 
-    const callGemini = async (modelName) => {
-      console.log(`Calling Gemini model: ${modelName}`);
+    const callGemini = async (modelName, apiVersion = 'v1beta') => {
+      console.log(`Calling Gemini model: ${modelName} via ${apiVersion}`);
       return await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/${apiVersion}/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -116,19 +116,19 @@ Ensure the LLM returns ONLY a valid JSON object matching this exact structure. D
       );
     };
 
-    let apiResponse = await callGemini('gemini-2.5-flash');
+    let apiResponse = await callGemini('gemini-2.5-flash', 'v1beta');
 
-    // FALLBACK: If 2.5 is overloaded (503), try 1.5 Flash
-    if (apiResponse.status === 503) {
-      console.warn("Gemini 2.5 is overloaded. Falling back to 1.5 Flash...");
-      apiResponse = await callGemini('gemini-1.5-flash');
+    // FALLBACK: If 2.5 is overloaded (503), try 1.5 Flash on v1
+    if (apiResponse.status === 503 || apiResponse.status === 429) {
+      console.warn(`Gemini 2.5 is ${apiResponse.status}. Falling back to 1.5 Flash...`);
+      apiResponse = await callGemini('gemini-1.5-flash', 'v1');
     }
 
     if (!apiResponse.ok) {
       const errorData = await apiResponse.text();
       console.error("Gemini API Error details:", apiResponse.status, errorData);
       return res.status(apiResponse.status).json({ 
-        error: 'Gemini API is currently overloaded or unavailable. Please try again in a few seconds.', 
+        error: 'Gemini API is currently overloaded. Please try again in a few seconds.', 
         status: apiResponse.status,
         details: errorData 
       });
